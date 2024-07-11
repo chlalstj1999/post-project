@@ -4,7 +4,7 @@ const app = express()
 
 app.use(express.json())
 app.use(session({
-    secret : "abcd@1234"
+    secret : "0585d138dc7fbd1f"
 }))
 
 // app.use(session({
@@ -33,6 +33,9 @@ app.use("/find", findRouter)
 
 const postRouter = require("./src/router/posts")
 app.use("/posts", postRouter)
+
+const categoryRouter = require("./src/router/categorys")
+app.use("/categorys", categoryRouter)
 
 app.listen(8000, () => {
     console.log("8000번 포트에서 실행")
