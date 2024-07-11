@@ -11,7 +11,9 @@ router.post("/", (req, res) => {
             throw customError(400, "아이디 형식이 잘못됨")
         } else if (!pwValue.match(pwRegx)) {
             throw customError(400, "비밀번호 형식이 잘못됨")
-        } else if (idValue === "test12345" && pwValue === "test12345") {
+        } 
+        
+        if (idValue === "test12345" && pwValue === "test12345") {
             req.session.accountIdx = 1
             req.session.name = "name"
             req.session.roleIdx = 1
