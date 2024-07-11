@@ -8,11 +8,11 @@ router.post("/", (req, res) => {
     const phonenumber = req.body.phonenumber
     const gender = req.body.gender
     const birth = req.body.birth
-})
 
-router.post("/me", (req, res) => {
     res.send({
         "userName": userName,
+        "idValue" : idValue,
+        "pwValue" : pwValue,
         "email": email,
         "phonenumber": phonenumber,
         "gender": gender,
@@ -20,16 +20,51 @@ router.post("/me", (req, res) => {
     })
 })
 
+router.get("/me", (req, res) => {
+    const accountIdx = req.session.accountIdx
+
+    if (accountIdx) {
+        res.send({
+            "userName": "test",
+            "email": "test@example.com",
+            "phonenumber": "test",
+            "gender": "M",
+            "birth": "2000-01-01"
+        })
+    } else {
+        res.send("로그인 후 이용해주세요.")
+    }
+})
+
 router.put("/me", (req, res) => {
+    const accountIdx = req.session.accountIdx
     const userName = req.body.userName
     const email = req.body.email
     const phonenumber = req.body.phonenumber
     const gender = req.body.gender
     const birth = req.body.birth
+
+    if (accountIdx != "" ) {
+        res.send({
+            "userName" : "test",
+            "email" : "test@example.com",
+            "phonenumber" : "test",
+            "gender" : "M",
+            "birth" : "2000-01-01"
+        })
+    } else {
+        res.send("로그인 후 이용해주세요.")
+    }
 })
 
 router.delete("/me", (req, res) => {{
-    
+    const accountIdx = req.session.accountIdx
+
+    if (accountIdx != "") {
+        res.send("회원 탈퇴가 완료되었습니다.")
+    } else {
+        res.send("로그인 후 이용해주세요.")
+    }
 }})
 
 module.exports = router
