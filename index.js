@@ -1,14 +1,39 @@
 const express = require("express")
+const mariadb = require("mariadb")
 const session = require("express-session")
 const app = express()
 
 app.use(express.json())
 app.use(session({
-    secret : "0585d138dc7fbd1f"
+    secret : "0585d138dc7fbd1f",
+    resave : false,
+    saveUninitialized : true
 }))
 
+const pool = mariadb.createPool({
+    host: "43.203.229.70",
+    user: "stageus",
+    password: "1234",
+    database: "post"
+})
+
+// 비동기 함수(asynchronous function) : 실행 중에 다른 작업을 중단하지 않고 실행할 수 있음
+// 오래 걸리는 작업을 기다리지 않고, 다른 것을 먼저 처리하려고 할 때 사용
+// 네트워크 요청, 파일 시스템 엑세스, 데이터베이스 쿼리, 타이머 기반의 작업
+// async 함수는 비동기 함수를 정의할 때 사용되는 키워드
+// await 키워드는 promise가 처리될 때까지 기다림 -> 하나의 작업만 하는 것처럼 보임..?!
+// await은 일반적으로 비동기 작업을 처리할 때 동기적으로 보이게 만들어 줌
+app.get("/", async (req, res) => {
+    try {
+        const conn = await pool.getConnection()
+        const rows = await conn.query("SELECT * FROM role;")
+        res.send(rows)
+    } catch (err) {
+        res.status(500).send(err)
+    }
+  })
 // app.use(session({
-//     secure: ture,	// https 환경에서만 session 정보를 주고받도록처리
+//     secure: true,	// https 환경에서만 session 정보를 주고받도록처리
 //     secret: process.env.COOKIE_SECRET, // 암호화하는 데 쓰일 키
 //     resave: false, // 세션을 언제나 저장할지 설정함 -> request할 때마다 session을 다시 만들겠냐
 //     saveUninitialized: true, // 세션에 저장할 내역이 없더라도 처음부터 세션을 생성할지 설정 -> 내가 세션 사용 안할거야 근데도 만들겠냐,,
