@@ -19,6 +19,7 @@ router.get("/", (req, res) => {
         }
 
         res.status(200).send({
+            "categoryIdx" : categoryIdx,
             "postTitle" : "아무거나 제목"
         })
     } catch (err) {
