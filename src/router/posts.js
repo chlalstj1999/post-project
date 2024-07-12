@@ -19,7 +19,6 @@ router.get("/", (req, res) => {
         }
 
         res.status(200).send({
-            "categoryIdx" : categoryIdx,
             "postTitle" : "아무거나 제목"
         })
     } catch (err) {
@@ -50,10 +49,7 @@ router.post("/", (req, res) => {
             throw customError(409, "해당 카테고리가 존재하지 않음")
         }
 
-        res.status(200).send({
-            //작성한 게시글로 가니까,,,
-            "postIdx" : 1
-        })
+        res.status(200).send()
     } catch (err) {
         res.status(statusCode || 500).send({
             "message" : err.message
@@ -82,9 +78,7 @@ router.put("/:postIdx", (req, res) => {
             throw customError(409, "해당 게시물이 존재하지 않음")
         }
 
-        res.status(200).send({
-            "postIdx" : 1
-        })
+        res.status(200).send()
     } catch (err) {
         res.status(statusCode || 500).send({
             "message" : err.message
@@ -147,16 +141,26 @@ router.delete("/:postIdx", (req, res) => {
 router.post("/:postIdx/comments", (req, res) => {
     const accountIdx = req.session.accountIdx
     const postIdx = req.params.postIdx
-    const content = req.body.content
+    const comment = req.body.comment
 
-    if (accountIdx != "") {
-        res.send({
-            "content" : content
+    try {
+        if (!accountIdx) {
+            throw customError(401, "로그인 필요")
+        } else if (!postIdx) {
+            throw customError(400, "postIdx 값이 안옴")
+        } else if (!comment.match(commentRegx)) {
+            throw customError(400, "댓글 형식 확인 필요")
+        }
+
+        if (postIdx != 1) {
+            throw customError(409, "해당 게시물이 존재하지 않음")
+        }
+
+        res.status(200).send()
+    } catch (err) {
+        res.status(statusCode || 500).send({
+            "message" : err.message
         })
-    } else if (content != "") {
-        res.send("댓글을 입력해주세요.")
-    } else {
-        res.send("로그인 후 이용해주세요.")
     }
 })
 
@@ -164,15 +168,31 @@ router.put("/:postIdx/comments/:commentIdx", (req, res) => {
     const accountIdx = req.session.accountIdx
     const postIdx = req.params.postIdx
     const commentIdx = req.params.postIdx
-    const content = req.body.content
+    const comment = req.body.comment
 
-    if (accountIdx == "") {
-        res.send("로그인 후 이용해주세요.") 
-    } else if (content == "") {
-        res.send("댓글을 입력해주세요.")
-    } else {
-        res.send({
-            "content" : content
+    try {
+        if (!accountIdx) {
+            throw customError(401, "로그인 필요")
+        } else if (!postIdx) {
+            throw customError(400, "postIdx 값이 안옴")
+        } else if (!commentIdx) {
+            throw customError(400, "commentIdx 값이 안 옴")
+        } else if (!comment.match(commentRegx)) {
+            throw customError(400, "댓글 형식 확인 필요")
+        }
+
+        if (postIdx != 1) {
+            throw customError(409, "해당 게시물이 존재하지 않음")
+        }
+
+        if (commentIdx != 1) {
+            throw customError(409, "해당 댓글이 존재하지 않음")
+        }
+
+        res.status(200).send()
+    } catch (err) {
+        res.status(statusCode || 500).send({
+            "message" : err.message
         })
     }
 })
@@ -181,15 +201,27 @@ router.get("/:postIdx/comments", (req, res) => {
     const accountIdx = req.session.accountIdx
     const postIdx = req.params.postIdx
     
-    if (accountIdx != "") {
-        res.send({
-            "content": "content",
-            "userName": "userName",
-            "createdAt": "createdAt"
-            // 더미데이터가 있어야 함
+    try {
+        if (!accountIdx) {
+            throw customError(401, "로그인 필요")
+        } else if (!postIdx) {
+            throw customError(400, "postIdx 값이 안옴")
+        }
+
+        if (postIdx != 1) {
+            throw customError(409, "해당 게시물이 존재하지 않음")
+        }
+
+        res.status(200).send({
+            "comment" : "댓글 내용",
+            "userName" : "작성자",
+            "createdAt" : "작성 시간",
+            "commentLike" : "좋아요 수"
         })
-    } else {
-        res.send("로그인 후 이용해주세요.")
+    } catch (err) {
+        res.status(statusCode || 500).send({
+            "message" : err.message
+        })
     }
 })
 
@@ -198,10 +230,28 @@ router.delete("/:postIdx/comments/:commentIdx", (req, res) => {
     const postIdx = req.params.postIdx
     const commentIdx = req.params.commentIdx
 
-    if (accountIdx != "") {
-        res.send("댓글이 삭제되었습니다.")
-    } else {
-        res.send("로그인 후 이용해주세요.")
+    try {
+        if (!accountIdx) {
+            throw customError(401, "로그인 필요")
+        } else if (!postIdx) {
+            throw customError(400, "postIdx 값이 안옴")
+        } else if (!commentIdx) {
+            throw customError(400, "commentIdx 값이 안옴")
+        }
+
+        if (postIdx != 1) {
+            throw customError(409, "해당 게시물이 존재하지 않음")
+        }
+
+        if (commentIdx != 1) {
+            throw customError(409, "해당 댓글이 존재하지 않음")
+        }
+
+        res.status(200).send()
+    } catch (err) {
+        res.status(statusCode || 500).send({
+            "message" : err.message
+        })
     }
 })
 
@@ -209,10 +259,22 @@ router.post("/:postIdx/like", (req, res) => {
     const accountIdx = req.session.accountIdx
     const postIdx = req.params.postIdx
 
-    if (accountIdx != "") {
-        res.send("좋아요 눌렀습니다.")
-    } else {
-        res.send("로그인 후 이용해주세요.")
+    try {
+        if (!accountIdx) {
+            throw customError(401, "로그인 필요")
+        } else if (!postIdx) {
+            throw customError(400, "postIdx 값이 안옴")
+        }
+
+        if (postIdx != 1) {
+            throw customError(409, "해당 게시물이 존재하지 않음")
+        }
+
+        res.status(200).send()
+    } catch (err) {
+        res.status(statusCode || 500).send({
+            "message" : err.message
+        })
     }
 })
 
@@ -220,10 +282,22 @@ router.delete("/:postIdx/like", (req, res) => {
     const accountIdx = req.session.accountIdx
     const postIdx = req.params.postIdx
 
-    if (accountIdx != "") {
-        res.send("좋아요 취소했습니다.")
-    } else {
-        res.send("로그인 후 이용해주세요.")
+    try {
+        if (!accountIdx) {
+            throw customError(401, "로그인 필요")
+        } else if (!postIdx) {
+            throw customError(400, "postIdx 값이 안옴")
+        }
+
+        if (postIdx != 1) {
+            throw customError(409, "해당 게시물이 존재하지 않음")
+        }
+
+        res.status(200).send()
+    } catch (err) {
+        res.status(statusCode || 500).send({
+            "message" : err.message
+        })
     }
 })
 
@@ -232,10 +306,28 @@ router.post("/:postIdx/comments/:commentIdx/like", (req, res) => {
     const postIdx = req.params.postIdx
     const commentIdx = req.params.commentIdx
 
-    if (accountIdx != "") {
-        res.send("좋아요 눌렀습니다.")
-    } else {
-        res.send("로그인 후 이용해주세요.")
+    try {
+        if (!accountIdx) {
+            throw customError(401, "로그인 필요")
+        } else if (!postIdx) {
+            throw customError(400, "postIdx 값이 안옴")
+        } else if (!commentIdx) {
+            throw customError(400, "commentIdx 값이 안옴")
+        }
+
+        if (postIdx != 1) {
+            throw customError(409, "해당 게시물이 존재하지 않음")
+        }
+
+        if (commentIdx != 1) {
+            throw customError(409, "해당 댓글이 존재하지 않음")
+        }
+
+        res.status(200).send()
+    } catch (err) {
+        res.status(statusCode || 500).send({
+            "message" : err.message
+        })
     }
 })
 
@@ -244,10 +336,28 @@ router.delete("/:postIdx/comments/:commentIdx/like", (req, res) => {
     const postIdx = req.params.postIdx
     const commentIdx = req.params.commentIdx
 
-    if (accountIdx != "") {
-        res.send("좋아요 취소했습니다.")
-    } else {
-        res.send("로그인 후 이용해주세요.")
+    try {
+        if (!accountIdx) {
+            throw customError(401, "로그인 필요")
+        } else if (!postIdx) {
+            throw customError(400, "postIdx 값이 안옴")
+        } else if (!commentIdx) {
+            throw customError(400, "commentIdx 값이 안옴")
+        }
+
+        if (postIdx != 1) {
+            throw customError(409, "해당 게시물이 존재하지 않음")
+        }
+
+        if (commentIdx != 1) {
+            throw customError(409, "해당 댓글이 존재하지 않음")
+        }
+
+        res.status(200).send()
+    } catch (err) {
+        res.status(statusCode || 500).send({
+            "message" : err.message
+        })
     }
 })
 
