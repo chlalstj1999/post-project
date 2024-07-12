@@ -51,7 +51,7 @@ router.post("/", (req, res) => {
 
         res.status(200).send()
     } catch (err) {
-        res.status(statusCode || 500).send({
+        res.status(err.statusCode || 500).send({
             "message" : err.message
         })
     }
@@ -80,7 +80,7 @@ router.put("/:postIdx", (req, res) => {
 
         res.status(200).send()
     } catch (err) {
-        res.status(statusCode || 500).send({
+        res.status(err.statusCode || 500).send({
             "message" : err.message
         })
     }
@@ -109,7 +109,7 @@ router.get("/:postIdx", (req, res) => {
             "postLike" : "좋아요 수"
         })
     } catch (err) {
-        res.status(statusCode || 500).send({
+        res.status(err.statusCode || 500).send({
             "message" : err.message
         })
     }
@@ -132,7 +132,7 @@ router.delete("/:postIdx", (req, res) => {
 
         res.status(200).send()
     } catch (err) {
-        res.status(statusCode || 500).send({
+        res.status(err.statusCode || 500).send({
             "message" : err.message
         })
     }
@@ -158,7 +158,7 @@ router.post("/:postIdx/comments", (req, res) => {
 
         res.status(200).send()
     } catch (err) {
-        res.status(statusCode || 500).send({
+        res.status(err.statusCode || 500).send({
             "message" : err.message
         })
     }
@@ -191,7 +191,7 @@ router.put("/:postIdx/comments/:commentIdx", (req, res) => {
 
         res.status(200).send()
     } catch (err) {
-        res.status(statusCode || 500).send({
+        res.status(err.statusCode || 500).send({
             "message" : err.message
         })
     }
@@ -219,7 +219,7 @@ router.get("/:postIdx/comments", (req, res) => {
             "commentLike" : "좋아요 수"
         })
     } catch (err) {
-        res.status(statusCode || 500).send({
+        res.status(err.statusCode || 500).send({
             "message" : err.message
         })
     }
@@ -249,7 +249,7 @@ router.delete("/:postIdx/comments/:commentIdx", (req, res) => {
 
         res.status(200).send()
     } catch (err) {
-        res.status(statusCode || 500).send({
+        res.status(err.statusCode || 500).send({
             "message" : err.message
         })
     }
@@ -272,7 +272,7 @@ router.post("/:postIdx/like", (req, res) => {
 
         res.status(200).send()
     } catch (err) {
-        res.status(statusCode || 500).send({
+        res.status(err.statusCode || 500).send({
             "message" : err.message
         })
     }
@@ -295,7 +295,7 @@ router.delete("/:postIdx/like", (req, res) => {
 
         res.status(200).send()
     } catch (err) {
-        res.status(statusCode || 500).send({
+        res.status(err.statusCode || 500).send({
             "message" : err.message
         })
     }
@@ -325,7 +325,7 @@ router.post("/:postIdx/comments/:commentIdx/like", (req, res) => {
 
         res.status(200).send()
     } catch (err) {
-        res.status(statusCode || 500).send({
+        res.status(err.statusCode || 500).send({
             "message" : err.message
         })
     }
@@ -355,7 +355,7 @@ router.delete("/:postIdx/comments/:commentIdx/like", (req, res) => {
 
         res.status(200).send()
     } catch (err) {
-        res.status(statusCode || 500).send({
+        res.status(err.statusCode || 500).send({
             "message" : err.message
         })
     }
