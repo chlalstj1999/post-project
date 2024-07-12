@@ -1,19 +1,47 @@
 const router = require("express").Router()
+const customError = require("../const/error")
+const { postTitleRegx, postContetnRegx, commentRegx } = require("../const/regx")
+
+router.get("/", (req, res) => {
+    const accountIdx = req.session.accountIdx
+    const categoryIdx = req.query.categoryIdx
+
+    try {
+        if (!accountIdx) {
+            throw customError(401, "로그인 필요")
+        } else if (!categoryIdx) {
+            throw customError(400, "categoryIdx 값이 없음")
+            // idx 값이 빈 값으로 옴
+        }
+        // 데이터 존재하지 않으면
+        if (categoryIdx != 1) {
+            throw customError(409, "해당 카테고리가 존재하지 않음")
+        }
+
+        res.status(200).send({
+            "postTitle" : "아무거나 제목"
+        })
+    } catch (err) {
+        res.status(err.statusCode || 500).send({
+            "message" : err.message
+        })
+    }
+}) 
 
 router.post("/", (req, res) => {
     const accountIdx = req.session.accountIdx
+    const categoryIdx = req.query.categoryIdx
     const title = req.body.title
     const content = req.body.content
 
-    if (title == "" || content == "") {
-        res.send("제목과 내용을 입력해주세요.")
-    } else if (accountIdx) {
-        res.send({
-            "title" : title,
-            "content" : content
+    try {
+        if (!accountIdx) {
+            throw customError()
+        }
+    } catch (err) {
+        res.status(statusCode || 500).send({
+            "message" : err.message
         })
-    } else {
-        res.send("로그인 후 이용해주세요")
     }
 })
 
@@ -34,12 +62,6 @@ router.put("/:postIdx", (req, res) => {
         })
     }
 })
-
-// router.get('/session-test', (req, res) => {
-//     console.log(req.session)
-
-//     res.status(200).end()
-// })
 
 router.get("/:postIdx", (req, res) => {
     const accountIdx = req.session.accountIdx
