@@ -96,15 +96,28 @@ router.get("/:postIdx", (req, res) => {
     const accountIdx = req.session.accountIdx
     const postIdx = req.params.postIdx
     
-    if (accountIdx) {
-        res.send({
-            "tilte": "title",
-            "content": "content",
-            "userName": "userName",
-            "createdAt": "createdAt"
+    try {
+        if (!accountIdx) {
+            throw customError(401, "로그인 필요")
+        } else if (!postIdx) {
+            throw customError(400, "postIdx 값이 안옴")
+        }
+
+        if (postIdx != 1) {
+            throw customError(409, "해당 게시물이 존재하지 않음")
+        }
+
+        res.status(200).send({
+            "title" : "아무거나 제목",
+            "content" : "아무거나 내용",
+            "createdAt" : "작성 시간",
+            "userName" : "작성자",
+            "postLike" : "좋아요 수"
         })
-    } else {
-        res.send("로그인 후 이용해주세요.")
+    } catch (err) {
+        res.status(statusCode || 500).send({
+            "message" : err.message
+        })
     }
 })
 
@@ -112,10 +125,22 @@ router.delete("/:postIdx", (req, res) => {
     const accountIdx = req.session.accountIdx
     const postIdx = req.params.postIdx
 
-    if (accountIdx != "") {
-        res.send("게시물이 삭제되었습니다.")
-    } else {
-        res.send("로그인 후 이용해주세요.")
+    try {
+        if (!accountIdx) {
+            throw customError(401, "로그인 필요")
+        } else if (!postIdx) {
+            throw customError(400, "postIdx 값이 안옴")
+        }
+
+        if (postIdx != 1) {
+            throw customError(409, "해당 게시물이 존재하지 않음")
+        }
+
+        res.status(200).send()
+    } catch (err) {
+        res.status(statusCode || 500).send({
+            "message" : err.message
+        })
     }
 })
 
