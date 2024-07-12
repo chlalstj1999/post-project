@@ -36,6 +36,7 @@ router.get("/", (req, res) => {
     }
 
     res.status(200).send({
+        "categoryIdx" : 1,
         "categoryName" : "야구"
     })
 })
