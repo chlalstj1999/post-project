@@ -2,7 +2,7 @@ const router = require("express").Router()
 const customError = require("../const/error")
 const { postTitleRegx, postContentRegx, commentRegx } = require("../const/regx")
 
-router.get("/", (req, res) => {
+router.get("/", (req, res, next) => {
     const accountIdx = req.session.accountIdx
     const categoryIdx = req.query.categoryIdx
 
@@ -22,13 +22,11 @@ router.get("/", (req, res) => {
             "postTitle" : "아무거나 제목"
         })
     } catch (err) {
-        res.status(err.statusCode || 500).send({
-            "message" : err.message
-        })
+        next(err)
     }
 }) 
 
-router.post("/", (req, res) => {
+router.post("/", (req, res, next) => {
     const accountIdx = req.session.accountIdx
     const categoryIdx = req.query.categoryIdx
     const title = req.body.title
@@ -50,10 +48,10 @@ router.post("/", (req, res) => {
         }
 
         res.status(200).send()
+        console.log(`title : ${title}`)
+        console.log(`content : ${content}`)
     } catch (err) {
-        res.status(err.statusCode || 500).send({
-            "message" : err.message
-        })
+        next(err)
     }
 })
 
@@ -80,9 +78,7 @@ router.put("/:postIdx", (req, res) => {
 
         res.status(200).send()
     } catch (err) {
-        res.status(err.statusCode || 500).send({
-            "message" : err.message
-        })
+        next(err)
     }
 })
 
@@ -109,9 +105,7 @@ router.get("/:postIdx", (req, res) => {
             "postLike" : "좋아요 수"
         })
     } catch (err) {
-        res.status(err.statusCode || 500).send({
-            "message" : err.message
-        })
+        next(err)
     }
 })
 
@@ -132,9 +126,7 @@ router.delete("/:postIdx", (req, res) => {
 
         res.status(200).send()
     } catch (err) {
-        res.status(err.statusCode || 500).send({
-            "message" : err.message
-        })
+        next(err)
     }
 })
 
@@ -158,9 +150,7 @@ router.post("/:postIdx/comments", (req, res) => {
 
         res.status(200).send()
     } catch (err) {
-        res.status(err.statusCode || 500).send({
-            "message" : err.message
-        })
+        next(err)
     }
 })
 
@@ -191,9 +181,7 @@ router.put("/:postIdx/comments/:commentIdx", (req, res) => {
 
         res.status(200).send()
     } catch (err) {
-        res.status(err.statusCode || 500).send({
-            "message" : err.message
-        })
+        next(err)
     }
 })
 
@@ -219,9 +207,7 @@ router.get("/:postIdx/comments", (req, res) => {
             "commentLike" : "좋아요 수"
         })
     } catch (err) {
-        res.status(err.statusCode || 500).send({
-            "message" : err.message
-        })
+        next(err)
     }
 })
 
@@ -249,9 +235,7 @@ router.delete("/:postIdx/comments/:commentIdx", (req, res) => {
 
         res.status(200).send()
     } catch (err) {
-        res.status(err.statusCode || 500).send({
-            "message" : err.message
-        })
+        next(err)
     }
 })
 
@@ -272,9 +256,7 @@ router.post("/:postIdx/like", (req, res) => {
 
         res.status(200).send()
     } catch (err) {
-        res.status(err.statusCode || 500).send({
-            "message" : err.message
-        })
+        next(err)
     }
 })
 
@@ -295,9 +277,7 @@ router.delete("/:postIdx/like", (req, res) => {
 
         res.status(200).send()
     } catch (err) {
-        res.status(err.statusCode || 500).send({
-            "message" : err.message
-        })
+        next(err)
     }
 })
 
@@ -325,9 +305,7 @@ router.post("/:postIdx/comments/:commentIdx/like", (req, res) => {
 
         res.status(200).send()
     } catch (err) {
-        res.status(err.statusCode || 500).send({
-            "message" : err.message
-        })
+        next(err)
     }
 })
 
@@ -355,9 +333,7 @@ router.delete("/:postIdx/comments/:commentIdx/like", (req, res) => {
 
         res.status(200).send()
     } catch (err) {
-        res.status(err.statusCode || 500).send({
-            "message" : err.message
-        })
+        next(err)
     }
 })
 
