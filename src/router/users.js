@@ -2,7 +2,7 @@ const router = require("express").Router()
 const { idRegx, pwRegx, userNameRegx, phonenumberRegx, emailRegx, gender, birth } = require("../const/regx")
 const customError = require("../const/error")
 
-router.post("/", (req, res) => {
+router.post("/", (req, res, next) => {
     const userName = req.body.userName
     const idValue = req.body.idValue
     const pwValue = req.body.pwValue
@@ -35,13 +35,11 @@ router.post("/", (req, res) => {
 
         res.status(200).send()
     } catch (err) {
-        res.status(err.statusCode || 500).send({
-            "message" : err.message
-        })
+        next(err)
     }
 })
 
-router.get("/me", (req, res) => {
+router.get("/me", (req, res, next) => {
     const accountIdx = req.session.accountIdx
 
     try {
@@ -56,13 +54,11 @@ router.get("/me", (req, res) => {
                 "birth" : "2000-01-01"
         })
     } catch (err) {
-        res.status(err.statusCode || 500).send({
-            "message" : err.message
-        })
+        next(err)
     }
 })
 
-router.put("/me", (req, res) => {
+router.put("/me", (req, res, next) => {
     const accountIdx = req.session.accountIdx
     const userName = req.body.userName
     const email = req.body.email
@@ -93,13 +89,11 @@ router.put("/me", (req, res) => {
             "birth" : birth
         })
     } catch (err) {
-        res.status(err.statusCode || 500).send({
-            "message" : err.message
-        })
+        next(err)
     }
 })
 
-router.delete("/me", (req, res) => {{
+router.delete("/me", (req, res, next) => {{
     const accountIdx = req.session.accountIdx
 
     try {
@@ -109,9 +103,7 @@ router.delete("/me", (req, res) => {{
             
         res.status(200).send()
     } catch (err) {
-        res.status(err.statusCode).send({
-            "message" : err.message
-        })
+        next(err)
     }
 }})
 
