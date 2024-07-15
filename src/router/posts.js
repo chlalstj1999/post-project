@@ -55,7 +55,7 @@ router.post("/", (req, res, next) => {
     }
 })
 
-router.put("/:postIdx", (req, res) => {
+router.put("/:postIdx", (req, res, next) => {
     const accountIdx = req.session.accountIdx
     const postIdx = req.params.postIdx
     const title = req.body.title
@@ -82,7 +82,7 @@ router.put("/:postIdx", (req, res) => {
     }
 })
 
-router.get("/:postIdx", (req, res) => {
+router.get("/:postIdx", (req, res, next) => {
     const accountIdx = req.session.accountIdx
     const postIdx = req.params.postIdx
     
@@ -109,7 +109,7 @@ router.get("/:postIdx", (req, res) => {
     }
 })
 
-router.delete("/:postIdx", (req, res) => {
+router.delete("/:postIdx", (req, res, next) => {
     const accountIdx = req.session.accountIdx
     const postIdx = req.params.postIdx
 
@@ -130,7 +130,7 @@ router.delete("/:postIdx", (req, res) => {
     }
 })
 
-router.post("/:postIdx/comments", (req, res) => {
+router.post("/:postIdx/comments", (req, res, next) => {
     const accountIdx = req.session.accountIdx
     const postIdx = req.params.postIdx
     const comment = req.body.comment
@@ -154,7 +154,7 @@ router.post("/:postIdx/comments", (req, res) => {
     }
 })
 
-router.put("/:postIdx/comments/:commentIdx", (req, res) => {
+router.put("/:postIdx/comments/:commentIdx", (req, res, next) => {
     const accountIdx = req.session.accountIdx
     const postIdx = req.params.postIdx
     const commentIdx = req.params.postIdx
@@ -185,7 +185,7 @@ router.put("/:postIdx/comments/:commentIdx", (req, res) => {
     }
 })
 
-router.get("/:postIdx/comments", (req, res) => {
+router.get("/:postIdx/comments", (req, res, next) => {
     const accountIdx = req.session.accountIdx
     const postIdx = req.params.postIdx
     
@@ -211,7 +211,7 @@ router.get("/:postIdx/comments", (req, res) => {
     }
 })
 
-router.delete("/:postIdx/comments/:commentIdx", (req, res) => {
+router.delete("/:postIdx/comments/:commentIdx", (req, res, next) => {
     const accountIdx = req.session.accountIdx
     const postIdx = req.params.postIdx
     const commentIdx = req.params.commentIdx
@@ -239,7 +239,7 @@ router.delete("/:postIdx/comments/:commentIdx", (req, res) => {
     }
 })
 
-router.post("/:postIdx/like", (req, res) => {
+router.post("/:postIdx/like", (req, res, next) => {
     const accountIdx = req.session.accountIdx
     const postIdx = req.params.postIdx
 
@@ -260,7 +260,7 @@ router.post("/:postIdx/like", (req, res) => {
     }
 })
 
-router.delete("/:postIdx/like", (req, res) => {
+router.delete("/:postIdx/like", (req, res, next) => {
     const accountIdx = req.session.accountIdx
     const postIdx = req.params.postIdx
 
@@ -281,7 +281,7 @@ router.delete("/:postIdx/like", (req, res) => {
     }
 })
 
-router.post("/:postIdx/comments/:commentIdx/like", (req, res) => {
+router.post("/:postIdx/comments/:commentIdx/like", (req, res, next) => {
     const accountIdx = req.session.accountIdx
     const postIdx = req.params.postIdx
     const commentIdx = req.params.commentIdx
@@ -309,7 +309,7 @@ router.post("/:postIdx/comments/:commentIdx/like", (req, res) => {
     }
 })
 
-router.delete("/:postIdx/comments/:commentIdx/like", (req, res) => {
+router.delete("/:postIdx/comments/:commentIdx/like", (req, res, next) => {
     const accountIdx = req.session.accountIdx
     const postIdx = req.params.postIdx
     const commentIdx = req.params.commentIdx
