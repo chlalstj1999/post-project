@@ -39,6 +39,51 @@ router.post("/", (req, res, next) => {
     }
 })
 
+router.get("/", (req, res, next) => {
+    const accountIdx = req.session.accountIdx
+    const roleIdx = req.session.roleIdx
+
+    try {
+        if (!accountIdx) {
+            throw customError(401, "로그인 필요")
+        } else if (roleIdx != 1) {
+            throw customError(409, "관리자 권한 필요")
+        }
+
+        res.status(200).send({
+            "userName" : "최민서",
+            "email" : "test12345@example.com",
+            "roleName" : "user"
+        })
+    } catch (err) {
+        next(err)
+    }
+})
+
+router.put("/auth/:userIdx", (req, res, next) => {
+    const accountIdx = req.session.accountIdx
+    const roleIdx = req.session.roleIdx
+    const userIdx = req.params.userIdx
+
+    try {
+        if (!accountIdx) {
+            throw customError(401, "로그인 필요")
+        } else if (roleIdx != 1) {
+            throw customError(409, "관리자 권한 필요")
+        } else if (!userIdx) {
+            throw customError(400, "userIdx 안 옴")
+        }
+
+        if (userIdx != 2) {
+            throw customError(404, "해당 user 존재하지 않음")
+        }
+
+        res.status(200).send()
+    } catch (err) {
+        next(err)
+    }
+})
+
 router.get("/me", (req, res, next) => {
     const accountIdx = req.session.accountIdx
 
