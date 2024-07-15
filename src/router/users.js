@@ -1,5 +1,5 @@
 const router = require("express").Router()
-const { idRegx, pwRegx, userNameRegx, phonenumberRegx, emailRegx, gender, birth } = require("../const/regx")
+const { idRegx, pwRegx, userNameRegx, emailRegx, genderRegx, birthRegx } = require("../const/regx")
 const customError = require("../const/error")
 
 router.post("/", (req, res, next) => {
@@ -13,15 +13,15 @@ router.post("/", (req, res, next) => {
     try {
         if (!userName.match(userNameRegx)) {
             throw customError(400, "이름 형식이 잘못됨")
-        } else if (!idValue.match(idValue)) {
+        } else if (!idValue.match(idRegx)) {
             throw customError(400, "아이디 형식이 잘못됨")
-        } else if (!pwValue.match(pwValue)) {
+        } else if (!pwValue.match(pwRegx)) {
             throw customError(400, "비밀번호 형식이 잘못됨")
-        } else if (!email.match(email)) {
+        } else if (!email.match(emailRegx)) {
             throw customError(400, "이메일 형식이 잘못됨")
-        } else if (!gender.match(gender)) {
+        } else if (!gender.match(genderRegx)) {
             throw customError(400, "성별 형식이 잘못됨")
-        } else if (!birth.match(birth)) {
+        } else if (!birth.match(birthRegx)) {
             throw customError(400, "생일 형식이 잘못됨")
         }
 
@@ -44,7 +44,7 @@ router.get("/me", (req, res, next) => {
 
     try {
         if (!accountIdx) {
-            throw customError(401, "로그인 후 이용")
+            throw customError(401, "로그인 필요")
         }
 
         res.status(200).send({
@@ -67,7 +67,7 @@ router.put("/me", (req, res, next) => {
 
     try {
         if (!accountIdx) {
-            throw customError(401, "로그인 후 이용")
+            throw customError(401, "로그인 필요")
         } else if (!userName.match(userNameRegx)) {
             throw customError(400, "이름 형식이 잘못됨")
         } else if (!email.match(email)) {
