@@ -1,7 +1,7 @@
 const router = require("express").Router()
 const customError = require("../const/error")
 
-router.delete("/", (req, res) => {
+router.delete("/", (req, res, next) => {
     try {
         if (!req.session.accountIdx) {
             throw customError(401, "로그인 후 이용해주세요")
@@ -10,9 +10,7 @@ router.delete("/", (req, res) => {
             res.status(200).send()
         }
     } catch (err) {
-        res.status(err.statusCode || 500).send({
-            "message" : err.message
-        })
+        next(err)
     }
 })
 
