@@ -69,6 +69,7 @@ router.put("/:categoryIdx", (req, res, next) => {
         }
     
         res.status(200).send()
+        console.log(`categoryName : ${categoryName}`)
     } catch (err) {
         next(err)
     }
@@ -92,7 +93,7 @@ router.delete("/:categoryIdx", (req, res, next) => {
             throw customError(409, "해당 카테고리가 존재하지 않음")
         }
     
-        res.status(200).send
+        res.status(200).send()
     } catch (err) {
         next(err)
     }
