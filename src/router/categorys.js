@@ -2,7 +2,7 @@ const router = require("express").Router()
 const { categoryNameRegx } = require("../const/regx")
 const customError = require("../const/error")
 
-router.post("/", (req, res) => {
+router.post("/", (req, res, next) => {
     const accountIdx = req.session.accountIdx
     const roleIdx = req.session.roleIdx
     const categoryName = req.body.categoryName
@@ -22,25 +22,27 @@ router.post("/", (req, res) => {
 
         res.status(200).send()
     } catch (err) {
-        res.status(err.statusCode || 500).send({
-            "message" : err.message
-        })
+        next(err)
     }
 })
 
-router.get("/", (req, res) => {
+router.get("/", (req, res, next) => {
     const accountIdx = req.session.accountIdx
     
-    if (!accountIdx) {
-        throw customError(401, "로그인 필요")
+    try {
+        if (!accountIdx) {
+            throw customError(401, "로그인 필요")
+        }
+    
+        res.status(200).send({
+            "categoryName" : "야구"
+        })
+    } catch {
+        next(err)
     }
-
-    res.status(200).send({
-        "categoryName" : "야구"
-    })
 })
 
-router.put("/:categoryIdx", (req, res) => {
+router.put("/:categoryIdx", (req, res, next) => {
     const accountIdx = req.session.accountIdx
     const roleIdx = req.session.roleIdx
     const categoryIdx = req.params.categoryIdx
@@ -67,13 +69,11 @@ router.put("/:categoryIdx", (req, res) => {
     
         res.status(200).send()
     } catch (err) {
-        res.status(err.statusCode || 500).send({
-            "message" : err.message
-        })
+        next(err)
     }
 })
 
-router.delete("/:categoryIdx", (req, res) => {
+router.delete("/:categoryIdx", (req, res, next) => {
     const accountIdx = req.session.accountIdx
     const roleIdx = req.session.roleIdx
     const categoryIdx = req.params.categoryIdx
@@ -93,9 +93,7 @@ router.delete("/:categoryIdx", (req, res) => {
     
         res.status(200).send
     } catch (err) {
-        res.status(err.statusCode || 500).send({
-            "message" : err.message
-        })
+        next(err)
     }
 })
 
