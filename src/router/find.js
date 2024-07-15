@@ -2,7 +2,7 @@ const router = require("express").Router()
 const customError = require("../const/error")
 const { userNameRegx, emailRegx, idRegx } = require("../const/regx")
 
-router.get("/id", (req, res) => {
+router.get("/id", (req, res, next) => {
     const userName = req.body.userName
     const email = req.body.email
 
@@ -21,13 +21,11 @@ router.get("/id", (req, res) => {
             throw customError(404, "계정 정보가 없음")
         }
     } catch (err) {
-        res.status(err.statusCode || 500).send({
-            "message" : err.message
-        })
+        next(err)
     }
 })
 
-router.get("/pw", (req, res) => {
+router.get("/pw", (req, res, next) => {
     const userName = req.body.userName
     const idValue = req.body.idValue
 
@@ -46,9 +44,7 @@ router.get("/pw", (req, res) => {
             throw customError(404, "계정 정보가 없음")
         }
     } catch (err) {
-        res.status(err.statusCode || 500).send({
-            "message" : err.message
-        })
+        next(err)
     }
 })
 
