@@ -21,6 +21,7 @@ router.post("/", (req, res, next) => {
         }
 
         res.status(200).send()
+        console.log(`categoryName : ${categoryName}`)
     } catch (err) {
         next(err)
     }
