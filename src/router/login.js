@@ -2,7 +2,7 @@ const router = require("express").Router()
 const customError = require("../const/error")
 const { idRegx, pwRegx } = require("../const/regx")
 
-router.post("/", (req, res) => {
+router.post("/", (req, res, next) => {
     const idValue = req.body.idValue
     const pwValue = req.body.pwValue
 
@@ -25,9 +25,7 @@ router.post("/", (req, res) => {
             throw customError(404, "해당하는 계정 정보가 없습니다")
         }
     } catch (err) {
-        res.status(err.statusCode || 500).send({
-            "message" : err.message
-        })
+        next(err)
     }
 })
 
