@@ -1,8 +1,110 @@
 const router = require("express").Router()
 const { idRegx, pwRegx, userNameRegx, emailRegx, genderRegx, birthRegx } = require("../const/regx")
-const customError = require("../const/error")
+const checkLogin = require("../middleware/checkLogin")
+const checkRole = require("../middleware/checkRole")
+const customError = require("./data/error")
+const { user } = require("../const/role")
+const pool = require("./db/mariadb")
+let conn
 
-router.post("/", (req, res, next) => {
+router.post("/login", async (req, res, next) => {
+    const idValue = req.body.idValue
+    const pwValue = req.body.pwValue
+
+    try {
+        if (!idValue.match(idRegx)) {
+            throw customError(400, "아이디 형식이 잘못됨")
+        } else if (!pwValue.match(pwRegx)) {
+            throw customError(400, "비밀번호 형식이 잘못됨")
+        } 
+        
+        conn = await pool.getConnection()
+        const rows = await conn.query("SELECT idx, name, roleIdx FROM account WHERE id = ? AND password = ?", [idValue, pwValue])
+
+        if (rows.length === 0) {
+            throw customError(404, "해당하는 계정 정보가 없습니다")
+        } else {
+            req.session.accountIdx = rows[0].idx
+            req.session.name = rows[0].name
+            req.session.roleIdx = rows[0].roleIdx
+            res.status(200).send()
+            console.log(req.session.accountIdx)
+            console.log(req.session.name)
+            console.log(req.session.roleIdx)
+        }
+    } catch (err) {
+        next(err)
+    } finally {
+        if (conn) return conn.end()
+    }
+})
+
+router.delete("/logout", checkLogin, (req, res, next) => {
+    try {
+        req.session.destroy()
+        res.status(200).send()
+    } catch (err) {
+        next(err)
+    }
+})
+
+router.get("/find/id", async (req, res, next) => {
+    const userName = req.body.userName
+    const email = req.body.email
+
+    try {
+        if (!userName.match(userNameRegx)) {
+            throw customError(400, "이름 형식이 잘못됨")
+        } else if (!email.match(emailRegx)) {
+            throw customError(400, "이메일 형식이 잘못됨")
+        } 
+        
+        conn = await pool.getConnection()
+        const rows = await conn.query("SELECT id FROM account WHERE name = ? AND email = ?", [userName, email])
+
+        if (rows.length === 0) {
+            throw customError(404, "계정 정보가 없음")
+        } else {
+            res.status(200).send({
+                "idValue" : rows[0].id
+            })
+        }
+    } catch (err) {
+        next(err)
+    } finally {
+        if (conn) return conn.end()
+    }
+})
+
+router.get("/find/pw", async (req, res, next) => {
+    const userName = req.body.userName
+    const idValue = req.body.idValue
+
+    try {
+        if (!userName.match(userNameRegx)) {
+            throw customError(400, "이름 형식이 잘못됨")
+        } else if (!idValue.match(idRegx)) {
+            throw customError(400, "id 형식이 잘못됨")
+        } 
+        
+        conn = await pool.getConnection()
+        const rows = await conn.query("SELECT password FROM account WHERE name = ? AND id = ?", [userName, idValue])
+
+        if (rows.length === 0) {
+            throw customError(404, "계정 정보가 없음")
+        } else {
+            res.status(200).send({
+                "pwValue" : rows[0].password
+            })
+        }
+    } catch (err) {
+        next(err)
+    } finally {
+        if (conn) return conn.end()
+    }
+})
+
+router.post("/", async (req, res, next) => {
     const userName = req.body.userName
     const idValue = req.body.idValue
     const pwValue = req.body.pwValue
@@ -25,42 +127,50 @@ router.post("/", (req, res, next) => {
             throw customError(400, "생일 형식이 잘못됨")
         }
 
-        if (idValue === "test12345") {
+        conn = await pool.getConnection()
+        let rows = await conn.query("SELECT * FROM account WHERE id = ?", [idValue])
+
+        if (rows.length !== 0) {
             throw customError(409, "아이디 중복")
         }
 
-        if (email === "test12345@example.com") {
+        rows = await conn.query("SELECT * FROM account WHERE email = ?", [email])
+
+        if (rows.length !== 0) {
             throw customError(409, "이메일 중복")
         }
-
+        
+        await conn.query("INSERT INTO account (name, id, password, email, gender, birth, roleIdx) VALUES (?, ?, ?, ?, ?, ?, ?)", [userName, idValue, pwValue, email, gender, birth, user])
         res.status(200).send()
+        // console.log(`userName : ${userName}`)
+        // console.log(`idValue : ${idValue}`)
+        // console.log(`pwValue : ${pwValue}`)
+        // console.log(`email : ${email}`)
+        // console.log(`gender : ${gender}`)
+        // console.log(`birth : ${birth}`)
+        // 나중에는 지워주기
+        // develop / production -> if (모두가 develope일때만 실행) -> 환경변수로 해보기
     } catch (err) {
         next(err)
+    } finally {
+        if (conn) return conn.end()
     }
 })
 
-router.get("/", (req, res, next) => {
-    const accountIdx = req.session.accountIdx
-    const roleIdx = req.session.roleIdx
-
+router.get("/", checkLogin, checkRole, async (req, res, next) => {
     try {
-        if (!accountIdx) {
-            throw customError(401, "로그인 필요")
-        } else if (roleIdx != 1) {
-            throw customError(409, "관리자 권한 필요")
-        }
+        conn = await pool.getConnection()
+        const rows = await conn.query("SELECT account.name AS userName, account.id AS idValue, role.name AS roleName FROM account JOIN role ON account.roleIdx = role.idx")
 
-        res.status(200).send({
-            "userName" : "최민서",
-            "email" : "test12345@example.com",
-            "roleName" : "user"
-        })
+        res.status(200).send(rows)
     } catch (err) {
         next(err)
+    } finally {
+        if (conn) return conn.end()
     }
 })
 
-router.put("/auth/:userIdx", (req, res, next) => {
+router.put("/:userIdx/auth", (req, res, next) => {
     const accountIdx = req.session.accountIdx
     const roleIdx = req.session.roleIdx
     const userIdx = req.params.userIdx
@@ -127,12 +237,11 @@ router.put("/me", (req, res, next) => {
             throw customError(409, "이메일 중복")
         }
 
-        res.status(200).send({
-            "userName" : userName,
-            "email" : email,
-            "gender" : gender,
-            "birth" : birth
-        })
+        res.status(200).send()
+        console.log(`userName : ${userName}`)
+        console.log(`email : ${email}`)
+        console.log(`gender : ${gender}`)
+        console.log(`birth : ${birth}`)
     } catch (err) {
         next(err)
     }
