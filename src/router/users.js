@@ -3,7 +3,7 @@ const { idRegx, pwRegx, userNameRegx, emailRegx, genderRegx, birthRegx } = requi
 const checkLogin = require("../middleware/checkLogin")
 const checkRole = require("../middleware/checkRole")
 const customError = require("./data/error")
-const { user } = require("../const/role")
+const { admin, user } = require("../const/role")
 const pool = require("./db/mariadb")
 let conn
 
@@ -160,7 +160,7 @@ router.post("/", async (req, res, next) => {
 router.get("/", checkLogin, checkRole, async (req, res, next) => {
     try {
         conn = await pool.getConnection()
-        const rows = await conn.query("SELECT account.name AS userName, account.id AS idValue, role.name AS roleName FROM account JOIN role ON account.roleIdx = role.idx")
+        const rows = await conn.query("SELECT account.idx AS userIdx, account.name AS userName, account.id AS idValue, role.name AS roleName FROM account JOIN role ON account.roleIdx = role.idx")
 
         res.status(200).send(rows)
     } catch (err) {
@@ -170,24 +170,27 @@ router.get("/", checkLogin, checkRole, async (req, res, next) => {
     }
 })
 
-router.put("/:userIdx/auth", (req, res, next) => {
-    const accountIdx = req.session.accountIdx
-    const roleIdx = req.session.roleIdx
+router.put("/:userIdx/auth", checkLogin, checkRole, async(req, res, next) => {
     const userIdx = req.params.userIdx
 
     try {
-        if (!accountIdx) {
-            throw customError(401, "로그인 필요")
-        } else if (roleIdx != 1) {
-            throw customError(409, "관리자 권한 필요")
-        } else if (!userIdx) {
+        if (!userIdx) {
             throw customError(400, "userIdx 안 옴")
         }
 
-        if (userIdx != 2) {
-            throw customError(404, "해당 user 존재하지 않음")
-        }
+        conn = await pool.getConnection()
+        const rows = await conn.query("SELECT roleIdx FROM account WHERE idx = ?", [userIdx])
 
+        if (rows.length === 0) {
+            throw customError(404, "해당 user 존재하지 않음")
+        } 
+
+        if (rows[0].roleIdx === admin) {
+            await conn.query("UPDATE account SET roleIdx = ? WHERE idx = ?", [user, userIdx])
+        } else if (rows[0].roleIdx === user) {
+            await conn.query("UPDATE account SET roleIdx = ? WHERE idx = ?", [admin, userIdx])
+        }
+        
         res.status(200).send()
     } catch (err) {
         next(err)
