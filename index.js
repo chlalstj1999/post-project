@@ -1,7 +1,6 @@
 const express = require("express")
-const mariadb = require("mariadb")
 const session = require("express-session")
-const customError = require("./src/const/error")
+const customError = require("./src/router/data/error")
 const app = express()
 
 app.use(express.json())
@@ -22,14 +21,6 @@ app.use(session({
 //     }, 세션 - 쿠키
 //     name: 'session-cookie' // 세션 쿠키명 디폴트값은 connect.sid이지만 다른 이름을 줄수도 있다.
 //   }))
-
-const pool = mariadb.createPool({
-    host: "43.203.229.70",
-    user: "stageus",
-    password: "1234",
-    database: "post",
-    // connectionLimit: 5
-})
 
 // 비동기 함수(asynchronous function) : 실행 중에 다른 작업을 중단하지 않고 실행할 수 있음
 // 오래 걸리는 작업을 기다리지 않고, 다른 것을 먼저 처리하려고 할 때 사용
@@ -76,33 +67,28 @@ const pool = mariadb.createPool({
 // await 키워드는 promise가 처리될 때까지 기다림 -> 하나의 작업만 하는 것처럼 보임..?!
 // await은 일반적으로 비동기 작업을 처리할 때 동기적으로 보이게 만들어 줌
 // 동기적으로 보이게 만들어 줌 + 좀 더 간결한 코드
-app.get("/", async (req, res, next) => {
-    try {
-        const conn = await pool.getConnection()
-        const rows = await conn.query("SELECT * FROM role;")
-        res.send(rows)
-    } catch (err) {
-        next(err)
-    }
-  })
-
-const loginRouter = require("./src/router/login")
-app.use("/login", loginRouter)
-
-const logoutRouter = require("./src/router/logout")
-app.use("/logout", logoutRouter)
+// app.get("/", async (req, res, next) => {
+//     try {
+//         const conn = await pool.getConnection()
+//         const rows = await conn.query("SELECT * FROM role;")
+//         res.status(200).send(rows)
+//         conn.release()
+//     } catch (err) {
+//         next(err)
+//     }
+// })
 
 const userRouter = require("./src/router/users")
 app.use("/users", userRouter)
-
-const findRouter = require("./src/router/find")
-app.use("/find", findRouter)
 
 const postRouter = require("./src/router/posts")
 app.use("/posts", postRouter)
 
 const categoryRouter = require("./src/router/categorys")
 app.use("/categorys", categoryRouter)
+
+const commentRouter = require("./src/router/comments")
+app.use("/comments", categoryRouter)
 // 미들웨어 ? 서로 다른 애플리케이션이 서로 통신하는 데 사용되는 소프트웨어
 // 왜 사용하지 ..? 이게 없으면 개발자는 애플리케이션에 연결된 각 소프트웨어 구성 요소의 데이터 교환 모듈을 구축해야 함 == 개발자 편리
 //app.use(미들웨어) : 모든 요청에서 해당 미들웨어 실행
