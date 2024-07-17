@@ -194,25 +194,23 @@ router.put("/:userIdx/auth", checkLogin, checkRole, async(req, res, next) => {
         res.status(200).send()
     } catch (err) {
         next(err)
+    } finally {
+        if (conn) return conn.end()
     }
 })
 
-router.get("/me", (req, res, next) => {
+router.get("/me", checkLogin, async (req, res, next) => {
     const accountIdx = req.session.accountIdx
 
     try {
-        if (!accountIdx) {
-            throw customError(401, "로그인 필요")
-        }
+        conn = await pool.getConnection()
+        const rows = await conn.query("SELECT name AS userName, email, gender, birth FROM account WHERE idx=?", [accountIdx])
 
-        res.status(200).send({
-                "userName" : "최민서",
-                "email" : "test12345@example.com",
-                "gender" : "Men",
-                "birth" : "2000-01-01"
-        })
+        res.status(200).send(rows)
     } catch (err) {
         next(err)
+    } finally {
+        if (conn) return conn.end()
     }
 })
 
