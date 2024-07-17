@@ -3,6 +3,7 @@ const customError = require("./data/error")
 const { postTitleRegx, postContentRegx, commentRegx } = require("../const/regx")
 const pool = require("./db/mariadb")
 const checkLogin = require("../middleware/checkLogin")
+const checkUserMatch = require("../middleware/checkUserMatch")
 
 let conn
 
@@ -63,32 +64,26 @@ router.post("/", checkLogin, async (req, res, next) => {
     }
 })
 
-router.put("/:postIdx", (req, res, next) => {
-    const accountIdx = req.session.accountIdx
+router.put("/:postIdx", checkLogin, checkUserMatch, async (req, res, next) => {
     const postIdx = req.params.postIdx
     const title = req.body.title
     const content = req.body.content
 
     try {
-        if (!accountIdx) {
-            throw customError(401, "로그인 필요")
-        } else if (!postIdx) {
-            throw customError(400, "postIdx 값이 안옴")
-        } else if (!title.match(postTitleRegx)) {
+        if (!title.match(postTitleRegx)) {
             throw customError(400, "제목 형식 확인 필요")
         } else if (!content.match(postContentRegx)) {
             throw customError(400, "내용 형식 확인 필요")
         }
 
-        if (postIdx != 1) {
-            throw customError(404, "해당 게시물이 존재하지 않음")
-        }
+        conn = await pool.getConnection()
+        await conn.query("UPDATE post SET title = ?, content = ? WHERE idx = ?", [title, content, postIdx])
 
         res.status(200).send()
-        console.log(`title : ${title}`)
-        console.log(`content : ${content}`)
     } catch (err) {
         next(err)
+    } finally {
+        if (conn) return conn.end()
     }
 })
 
