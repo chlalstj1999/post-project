@@ -56,29 +56,27 @@ router.put("/:commentIdx", isLogin, isCommentUserMatch, async (req, res, next) =
     }
 })
 
-router.get("/", (req, res, next) => {
-    const accountIdx = req.session.accountIdx
+router.get("/", async(req, res, next) => {
     const postIdx = req.body.postIdx
     
     try {
-        if (!accountIdx) {
-            throw customError(401, "로그인 필요")
-        } else if (!postIdx) {
+        if (!postIdx) {
             throw customError(400, "postIdx 값이 안옴")
         }
+        
+        conn = await pool.getConnection()
+        const rows = await conn.query(`SELECT comment.idx AS commentIdx, account.name AS userName, comment.content, comment.createdAt, comment.countLike AS cntCommentLike
+            FROM comment JOIN account ON comment.accountIdx = account.idx WHERE comment.postIdx = ? ORDER BY comment.createdAt DESC`, [postIdx])
 
-        if (postIdx != 1) {
+        if (rows.length === 0) {
             throw customError(404, "해당 게시물이 존재하지 않음")
         }
 
-        res.status(200).send({
-            "comment" : "댓글 내용",
-            "userName" : "작성자",
-            "createdAt" : "작성 시간",
-            "commentLike" : "좋아요 수"
-        })
+        res.status(200).send(rows)
     } catch (err) {
         next(err)
+    } finally {
+        if (conn) return conn.end()
     }
 })
 
