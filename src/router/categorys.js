@@ -2,30 +2,33 @@ const router = require("express").Router()
 const { categoryNameRegx } = require("../const/regx")
 const customError = require("./data/error")
 const admin = require("../const/role")
+const checkLogin = require("../middleware/checkLogin")
+const checkRole = require("../middleware/checkRole")
+const pool = require("./db/mariadb")
+let conn
 
-router.post("/", (req, res, next) => {
-    const accountIdx = req.session.accountIdx
-    const roleIdx = req.session.roleIdx
+router.post("/", checkLogin, checkRole, async (req, res, next) => {
     const categoryName = req.body.categoryName
-    // const role.js만들어서 변수 만들어두고 1을 넣어두면 편함!!
-    // 프론트엔드로 보내줄 때는 const role.js regx.js를 공유함
+
     try{
-        if (!accountIdx) {
-            throw customError(401, "로그인 필요")
-        } else if (roleIdx != admin) {
-            throw customError(403, "관리자가 아니면 추가할 수 없음")
-        } else if (!categoryName.match(categoryNameRegx)) {
+        if (!categoryName.match(categoryNameRegx)) {
             throw customError(401, "카테고리 이름 형식 확인 필요")
         }
         
-        if (categoryName === "야구") {
+        conn = await pool.getConnection()
+        const rows = await conn.query("SELECT name FROM category WHERE name = ?", [categoryName])
+
+        if (rows.length !== 0) {
             throw customError(409, "카테고리가 이미 있음")
         }
 
+        await conn.query("INSERT INTO category (name) VALUES (?)", [categoryName])
+
         res.status(200).send()
-        console.log(`categoryName : ${categoryName}`)
     } catch (err) {
         next(err)
+    } finally {
+        if (conn) return conn.end()
     }
 })
 
