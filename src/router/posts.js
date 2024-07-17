@@ -1,42 +1,44 @@
 const router = require("express").Router()
 const customError = require("./data/error")
 const { postTitleRegx, postContentRegx, commentRegx } = require("../const/regx")
+const pool = require("./db/mariadb")
+const checkLogin = require("../middleware/checkLogin")
 
-router.get("/list", (req, res, next) => {
-    const accountIdx = req.session.accountIdx
+let conn
+
+router.get("/list", async (req, res, next) => {
     const categoryIdx = req.query.categoryIdx
 
     try {
-        if (!accountIdx) {
-            throw customError(401, "로그인 필요")
-        } else if (!categoryIdx) {
+        if (!categoryIdx) {
             throw customError(400, "categoryIdx 값이 없음")
-            // idx 값이 빈 값으로 옴
         }
-        // 데이터베이스에 존재하지 않으면
-        if (categoryIdx != 1) {
+        
+        conn = await pool.getConnection()
+        let rows = await conn.query("SELECT * FROM category WHERE idx = ?", [categoryIdx])
+
+        if (rows.length === 0) {
             throw customError(404, "해당 카테고리가 존재하지 않음")
         }
 
-        res.status(200).send({
-            //idx, 작성자, 작성일자 등 모두 보내주기
-            "postTitle" : "아무거나 제목"
-        })
+        rows = await conn.query("SELECT post.idx AS postIdx, account.name AS userName, post.title, post.createdAt FROM post JOIN account ON accountIdx = account.idx")
+
+        res.status(200).send(rows)
     } catch (err) {
         next(err)
+    } finally {
+        if (conn) return conn.end()
     }
 }) 
 
-router.post("/", (req, res, next) => {
+router.post("/", checkLogin, async (req, res, next) => {
     const accountIdx = req.session.accountIdx
-    const categoryIdx = req.query.categoryIdx
+    const categoryIdx = req.body.categoryIdx
     const title = req.body.title
     const content = req.body.content
 
     try {
-        if (!accountIdx) {
-            throw customError(401, "로그인 필요")
-        } else if (!categoryIdx) {
+        if (!categoryIdx) {
             throw customError(400, "categoryIdx 값이 안옴")
         } else if (!title.match(postTitleRegx)) {
             throw customError(400, "제목 형식 확인 필요")
@@ -44,15 +46,20 @@ router.post("/", (req, res, next) => {
             throw customError(400, "내용 형식 확인 필요")
         }
 
-        if (categoryIdx != 1) {
+        conn = await pool.getConnection()
+        const rows = await conn.query("SELECT * FROM category WHERE idx = ?", [categoryIdx])
+
+        if (rows.length === 0) {
             throw customError(404, "해당 카테고리가 존재하지 않음")
         }
 
+        await conn.query("INSERT INTO post (accountIdx, title, content, categoryIdx, countLike) VALUES (?, ?, ?, ?, ?)", [accountIdx, title, content, categoryIdx, 0])
+
         res.status(200).send()
-        console.log(`title : ${title}`)
-        console.log(`content : ${content}`)
     } catch (err) {
         next(err)
+    } finally {
+        if (conn) return conn.end()
     }
 })
 
