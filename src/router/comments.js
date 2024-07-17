@@ -2,7 +2,7 @@ const router = require("express").Router()
 const customError = require("./data/error")
 const { commentRegx } = require("../const/regx")
 const isLogin = require("../middleware/isLogin")
-const isCommentUserMatch = require("../middleware/isCommentUserMatch.js")
+const isCommentUserMatch = require("../middleware/isCommentUserMatch")
 const pool = require("./db/mariadb")
 let conn
 
@@ -37,29 +37,22 @@ router.post("/", isLogin, async (req, res, next) => {
 })
 
 router.put("/:commentIdx", isLogin, isCommentUserMatch, async (req, res, next) => {
-    const accountIdx = req.session.accountIdx
-    const commentIdx = req.params.postIdx
+    const commentIdx = req.params.commentIdx
     const comment = req.body.comment
 
     try {
-        if (!commentIdx) {
-            throw customError(400, "commentIdx 값이 안 옴")
-        } else if (!comment.match(commentRegx)) {
+        if (!comment.match(commentRegx)) {
             throw customError(400, "댓글 형식 확인 필요")
         }
 
-        if (postIdx != 1) {
-            throw customError(404, "해당 게시물이 존재하지 않음")
-        }
-
-        if (commentIdx != 1) {
-            throw customError(404, "해당 댓글이 존재하지 않음")
-        }
+        conn = await pool.getConnection()
+        await conn.query("UPDATE comment SET content = ? WHERE idx = ?", [comment, commentIdx])
 
         res.status(200).send()
-        console.log(`comment : ${comment}`)
     } catch (err) {
         next(err)
+    } finally {
+        if (conn) return conn.end()
     }
 })
 
