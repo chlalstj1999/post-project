@@ -32,19 +32,16 @@ router.post("/", checkLogin, checkRole, async (req, res, next) => {
     }
 })
 
-router.get("/", (req, res, next) => {
-    const accountIdx = req.session.accountIdx
-    
-    try {
-        if (!accountIdx) {
-            throw customError(401, "로그인 필요")
-        }
-    
-        res.status(200).send({
-            "categoryName" : "야구"
-        })
+router.get("/", async (req, res, next) => {
+    try {    
+        conn = await pool.getConnection()
+        const rows = await conn.query("SELECT idx AS categoryIdx, name AS categoryName FROM category")
+
+        res.status(200).send(rows)
     } catch {
         next(err)
+    } finally {
+        if (conn) return conn.end()
     }
 })
 
