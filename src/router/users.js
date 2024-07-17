@@ -214,7 +214,7 @@ router.get("/me", checkLogin, async (req, res, next) => {
     }
 })
 
-router.put("/me", (req, res, next) => {
+router.put("/me", checkLogin, async (req, res, next) => {
     const accountIdx = req.session.accountIdx
     const userName = req.body.userName
     const email = req.body.email
@@ -222,9 +222,7 @@ router.put("/me", (req, res, next) => {
     const birth = req.body.birth
 
     try {
-        if (!accountIdx) {
-            throw customError(401, "로그인 필요")
-        } else if (!userName.match(userNameRegx)) {
+        if (!userName.match(userNameRegx)) {
             throw customError(400, "이름 형식이 잘못됨")
         } else if (!email.match(email)) {
             throw customError(400, "이메일 형식이 잘못됨")
@@ -234,27 +232,28 @@ router.put("/me", (req, res, next) => {
             throw customError(400, "생일 형식이 잘못됨")
         }
         
-        if (email === "test12345@example.com") {
+        conn = await pool.getConnection()
+        const rows = await conn.query("SELECT email FROM account WHERE email = ? AND idx != ?", [email, accountIdx])
+
+        if (rows.length !== 0) {
             throw customError(409, "이메일 중복")
         }
 
+        await conn.query("UPDATE account SET name = ?, email = ?, gender = ?, birth = ? WHERE idx = ?", [userName, email, gender, birth, accountIdx])
         res.status(200).send()
-        console.log(`userName : ${userName}`)
-        console.log(`email : ${email}`)
-        console.log(`gender : ${gender}`)
-        console.log(`birth : ${birth}`)
     } catch (err) {
         next(err)
+    } finally {
+        if (conn) return conn.end()
     }
 })
 
-router.delete("/me", (req, res, next) => {{
+router.delete("/me", checkLogin, async (req, res, next) => {{
     const accountIdx = req.session.accountIdx
 
     try {
-        if (!accountIdx) {
-            throw customError(401, "로그인 필요")
-        }
+        conn = await pool.getConnection()
+        await conn.query("DELETE FROM account WHERE idx = ?", [accountIdx])
             
         res.status(200).send()
     } catch (err) {
