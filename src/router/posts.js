@@ -106,27 +106,23 @@ router.get("/:postIdx", async (req, res, next) => {
         res.status(200).send(rows)
     } catch (err) {
         next(err)
+    } finally {
+        if (conn) return conn.end()
     }
 })
 
-router.delete("/:postIdx", (req, res, next) => {
-    const accountIdx = req.session.accountIdx
+router.delete("/:postIdx", checkLogin, checkUserMatch, async (req, res, next) => {
     const postIdx = req.params.postIdx
 
     try {
-        if (!accountIdx) {
-            throw customError(401, "로그인 필요")
-        } else if (!postIdx) {
-            throw customError(400, "postIdx 값이 안옴")
-        }
-
-        if (postIdx != 1) {
-            throw customError(404, "해당 게시물이 존재하지 않음")
-        }
+        conn = await pool.getConnection()
+        await conn.query("DELETE FROM post WHERE idx = ?", [postIdx])
 
         res.status(200).send()
     } catch (err) {
         next(err)
+    } finally {
+        if (conn) return conn.end()
     }
 })
 
