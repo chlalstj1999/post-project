@@ -74,30 +74,33 @@ router.put("/:categoryIdx", checkLogin, checkRole, async (req, res, next) => {
         res.status(200).send()
     } catch (err) {
         next(err)
+    } finally {
+        if (conn) return conn.end()
     }
 })
 
-router.delete("/:categoryIdx", (req, res, next) => {
-    const accountIdx = req.session.accountIdx
-    const roleIdx = req.session.roleIdx
+router.delete("/:categoryIdx", checkLogin, checkRole, async (req, res, next) => {
     const categoryIdx = req.params.categoryIdx
     
     try {
-        if (!accountIdx) {
-            throw customError(401, "로그인 필요")
-        } else if (roleIdx != admin) {
-            throw customError(403, "관리자가 아니면 삭제할 수 없음")
-        } else if (!categoryIdx) {
+        if (!categoryIdx) {
             throw customError(400, "categoryIdx 값이 오지 않음")
         }
+
+        conn = await pool.getConnection()
+        const rows = await conn.query("SELECT * FROM category WHERE idx = ?", [categoryIdx])
     
-        if (categoryIdx != 1) {
+        if (rows.length === 0) {
             throw customError(404, "해당 카테고리가 존재하지 않음")
         }
+
+        await conn.query("DELETE FROM category WHERE idx = ?", [categoryIdx])
     
         res.status(200).send()
     } catch (err) {
         next(err)
+    } finally {
+        if (conn) return conn.end()
     }
 })
 
