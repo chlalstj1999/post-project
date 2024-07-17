@@ -1,10 +1,11 @@
 const router = require("express").Router()
 const { idRegx, pwRegx, userNameRegx, emailRegx, genderRegx, birthRegx } = require("../const/regx")
-const checkLogin = require("../middleware/checkLogin")
-const checkRole = require("../middleware/checkRole")
+const isLogin = require("../middleware/isLogin")
+const isRole = require("../middleware/isRole")
 const customError = require("./data/error")
 const { admin, user } = require("../const/role")
 const pool = require("./db/mariadb")
+
 let conn
 
 router.post("/login", async (req, res, next) => {
@@ -157,7 +158,7 @@ router.post("/", async (req, res, next) => {
     }
 })
 
-router.get("/", checkLogin, checkRole, async (req, res, next) => {
+router.get("/", isLogin, isRole, async (req, res, next) => {
     try {
         conn = await pool.getConnection()
         const rows = await conn.query("SELECT account.idx AS userIdx, account.name AS userName, account.id AS idValue, role.name AS roleName FROM account JOIN role ON account.roleIdx = role.idx")
@@ -170,7 +171,7 @@ router.get("/", checkLogin, checkRole, async (req, res, next) => {
     }
 })
 
-router.put("/:userIdx/auth", checkLogin, checkRole, async(req, res, next) => {
+router.put("/:userIdx/auth", isLogin, isRole, async(req, res, next) => {
     const userIdx = req.params.userIdx
 
     try {
@@ -199,7 +200,7 @@ router.put("/:userIdx/auth", checkLogin, checkRole, async(req, res, next) => {
     }
 })
 
-router.get("/me", checkLogin, async (req, res, next) => {
+router.get("/me", isLogin, async (req, res, next) => {
     const accountIdx = req.session.accountIdx
 
     try {
@@ -214,7 +215,7 @@ router.get("/me", checkLogin, async (req, res, next) => {
     }
 })
 
-router.put("/me", checkLogin, async (req, res, next) => {
+router.put("/me", isLogin, async (req, res, next) => {
     const accountIdx = req.session.accountIdx
     const userName = req.body.userName
     const email = req.body.email
@@ -248,7 +249,7 @@ router.put("/me", checkLogin, async (req, res, next) => {
     }
 })
 
-router.delete("/me", checkLogin, async (req, res, next) => {{
+router.delete("/me", isLogin, async (req, res, next) => {{
     const accountIdx = req.session.accountIdx
 
     try {

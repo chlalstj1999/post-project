@@ -2,8 +2,8 @@ const router = require("express").Router()
 const customError = require("./data/error")
 const { postTitleRegx, postContentRegx } = require("../const/regx")
 const pool = require("./db/mariadb")
-const checkLogin = require("../middleware/checkLogin")
-const checkUserMatch = require("../middleware/checkUserMatch")
+const isLogin = require("../middleware/isLogin")
+const isPostUserMatch = require("../middleware/isPostUserMatch")
 
 let conn
 
@@ -35,7 +35,7 @@ router.get("/list", async (req, res, next) => {
     }
 }) 
 
-router.post("/", checkLogin, async (req, res, next) => {
+router.post("/", isLogin, async (req, res, next) => {
     const accountIdx = req.session.accountIdx
     const categoryIdx = req.body.categoryIdx
     const title = req.body.title
@@ -67,7 +67,7 @@ router.post("/", checkLogin, async (req, res, next) => {
     }
 })
 
-router.put("/:postIdx", checkLogin, checkUserMatch, async (req, res, next) => {
+router.put("/:postIdx", isLogin, isPostUserMatch, async (req, res, next) => {
     const postIdx = req.params.postIdx
     const title = req.body.title
     const content = req.body.content
@@ -114,7 +114,7 @@ router.get("/:postIdx", async (req, res, next) => {
     }
 })
 
-router.delete("/:postIdx", checkLogin, checkUserMatch, async (req, res, next) => {
+router.delete("/:postIdx", isLogin, isPostUserMatch, async (req, res, next) => {
     const postIdx = req.params.postIdx
 
     try {
@@ -129,7 +129,7 @@ router.delete("/:postIdx", checkLogin, checkUserMatch, async (req, res, next) =>
     }
 })
 
-router.post("/:postIdx/like", checkLogin, async (req, res, next) => {
+router.post("/:postIdx/like", isLogin, async (req, res, next) => {
     const accountIdx = req.session.accountIdx
     const postIdx = req.params.postIdx
 
@@ -164,7 +164,7 @@ router.post("/:postIdx/like", checkLogin, async (req, res, next) => {
     }
 })
 
-router.delete("/:postIdx/like", checkLogin, async (req, res, next) => {
+router.delete("/:postIdx/like", isLogin, async (req, res, next) => {
     const accountIdx = req.session.accountIdx
     const postIdx = req.params.postIdx
 

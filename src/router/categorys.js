@@ -1,13 +1,13 @@
 const router = require("express").Router()
 const { categoryNameRegx } = require("../const/regx")
 const customError = require("./data/error")
-const admin = require("../const/role")
-const checkLogin = require("../middleware/checkLogin")
-const checkRole = require("../middleware/checkRole")
+const isLogin = require("../middleware/isLogin")
+const isRole = require("../middleware/isRole")
 const pool = require("./db/mariadb")
+
 let conn
 
-router.post("/", checkLogin, checkRole, async (req, res, next) => {
+router.post("/", isLogin, isRole, async (req, res, next) => {
     const categoryName = req.body.categoryName
 
     try{
@@ -45,7 +45,7 @@ router.get("/", async (req, res, next) => {
     }
 })
 
-router.put("/:categoryIdx", checkLogin, checkRole, async (req, res, next) => {
+router.put("/:categoryIdx", isLogin, isRole, async (req, res, next) => {
     const categoryIdx = req.params.categoryIdx
     const categoryName = req.body.categoryName
 
@@ -79,7 +79,7 @@ router.put("/:categoryIdx", checkLogin, checkRole, async (req, res, next) => {
     }
 })
 
-router.delete("/:categoryIdx", checkLogin, checkRole, async (req, res, next) => {
+router.delete("/:categoryIdx", isLogin, isRole, async (req, res, next) => {
     const categoryIdx = req.params.categoryIdx
     
     try {

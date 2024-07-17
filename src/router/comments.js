@@ -1,12 +1,12 @@
 const router = require("express").Router()
 const customError = require("./data/error")
 const { commentRegx } = require("../const/regx")
-const checkLogin = require("../middleware/checkLogin")
-const checkUserMatch = require("../middleware/checkUserMatch")
+const isLogin = require("../middleware/isLogin")
+const isCommentUserMatch = require("../middleware/isCommentUserMatch.js")
 const pool = require("./db/mariadb")
 let conn
 
-router.post("/", checkLogin, async (req, res, next) => {
+router.post("/", isLogin, async (req, res, next) => {
     const accountIdx = req.session.accountIdx
     const postIdx = req.body.postIdx
     const comment = req.body.comment
@@ -14,10 +14,9 @@ router.post("/", checkLogin, async (req, res, next) => {
     try {
         if (!postIdx) {
             throw customError(400, "postIdx 값이 안옴")
-        } 
-        // else if (!comment.match(commentRegx)) {
-        //     throw customError(400, "댓글 형식 확인 필요")
-        // }
+        } else if (!comment.match(commentRegx)) {
+            throw customError(400, "댓글 형식 확인 필요")
+        }
 
         conn = await pool.getConnection()
         const rows = await conn.query("SELECT * FROM post WHERE idx = ?", [postIdx])
@@ -37,17 +36,13 @@ router.post("/", checkLogin, async (req, res, next) => {
     }
 })
 
-router.put("/:commentIdx", (req, res, next) => {
+router.put("/:commentIdx", isLogin, isCommentUserMatch, async (req, res, next) => {
     const accountIdx = req.session.accountIdx
     const commentIdx = req.params.postIdx
     const comment = req.body.comment
 
     try {
-        if (!accountIdx) {
-            throw customError(401, "로그인 필요")
-        } else if (!postIdx) {
-            throw customError(400, "postIdx 값이 안옴")
-        } else if (!commentIdx) {
+        if (!commentIdx) {
             throw customError(400, "commentIdx 값이 안 옴")
         } else if (!comment.match(commentRegx)) {
             throw customError(400, "댓글 형식 확인 필요")
