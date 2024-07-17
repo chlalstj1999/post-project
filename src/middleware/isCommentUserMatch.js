@@ -8,7 +8,7 @@ const checkUserMatch = async (req, res, next) => {
 
     try {
         if (!commentIdx) {
-            throw customError(400, "postIdx 값이 안 옴")
+            throw customError(400, "commentIdx 값이 안 옴")
         }
 
         const rows = await conn.query("SELECT accountIdx FROM comment WHERE idx = ?", [commentIdx])

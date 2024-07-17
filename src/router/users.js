@@ -40,7 +40,7 @@ router.post("/login", async (req, res, next) => {
     }
 })
 
-router.delete("/logout", checkLogin, (req, res, next) => {
+router.delete("/logout", isLogin, (req, res, next) => {
     try {
         req.session.destroy()
         res.status(200).send()
