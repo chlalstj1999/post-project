@@ -87,28 +87,23 @@ router.put("/:postIdx", checkLogin, checkUserMatch, async (req, res, next) => {
     }
 })
 
-router.get("/:postIdx", (req, res, next) => {
-    const accountIdx = req.session.accountIdx
+router.get("/:postIdx", async (req, res, next) => {
     const postIdx = req.params.postIdx
     
     try {
-        if (!accountIdx) {
-            throw customError(401, "로그인 필요")
-        } else if (!postIdx) {
+        if (!postIdx) {
             throw customError(400, "postIdx 값이 안옴")
         }
 
-        if (postIdx != 1) {
+        conn = await pool.getConnection()
+        const rows = await conn.query(`SELECT post.idx AS postIdx, account.name AS userName, post.title, post.content, post.createdAt  
+            FROM post JOIN account ON post.accountIdx = account.idx WHERE post.idx = ?`, [postIdx])
+
+        if (rows.length === 0) {
             throw customError(404, "해당 게시물이 존재하지 않음")
         }
 
-        res.status(200).send({
-            "title" : "아무거나 제목",
-            "content" : "아무거나 내용",
-            "createdAt" : "작성 시간",
-            "userName" : "작성자",
-            "postLike" : "좋아요 수"
-        })
+        res.status(200).send(rows)
     } catch (err) {
         next(err)
     }
