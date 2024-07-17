@@ -258,6 +258,8 @@ router.delete("/me", checkLogin, async (req, res, next) => {{
         res.status(200).send()
     } catch (err) {
         next(err)
+    } finally {
+        if (conn) return conn.end()
     }
 }})
 
