@@ -95,57 +95,73 @@ router.delete("/:commentIdx", isLogin, isCommentUserMatch, async (req, res, next
     }
 })
 
-router.post("/:commentIdx/like", (req, res, next) => {
+router.post("/:commentIdx/like", isLogin, async (req, res, next) => {
     const accountIdx = req.session.accountIdx
     const commentIdx = req.params.commentIdx
 
     try {
-        if (!accountIdx) {
-            throw customError(401, "로그인 필요")
-        } else if (!postIdx) {
-            throw customError(400, "postIdx 값이 안옴")
-        } else if (!commentIdx) {
+        if (!commentIdx) {
             throw customError(400, "commentIdx 값이 안옴")
         }
 
-        if (postIdx != 1) {
-            throw customError(404, "해당 게시물이 존재하지 않음")
-        }
-
-        if (commentIdx != 1) {
+        conn = await pool.getConnection()
+        let rows = await conn.query("SELECT * FROM comment WHERE idx = ?", [commentIdx])
+        if (rows.length === 0) {
             throw customError(404, "해당 댓글이 존재하지 않음")
         }
+
+        rows = await conn.query("SELECT * FROM commentLike WHERE commentIdx = ? AND accountIdx = ?", [commentIdx, accountIdx])
+        if (rows.length !== 0) {
+            throw customError(409, "이미 좋아요 누른 유저임")
+        }
+
+        await conn.query("INSERT INTO commentLike (commentIdx, accountIdx) VALUES (?, ?)", [commentIdx, accountIdx])
+        await conn.query(`UPDATE comment SET countLike = (
+            SELECT COUNT(*)
+            FROM commentLike 
+            JOIN comment ON commentLike.commentIdx = comment.idx
+            ) WHERE idx = ?`, [commentIdx])
 
         res.status(200).send()
     } catch (err) {
         next(err)
+    } finally {
+        if (conn) return conn.end()
     }
 })
 
-router.delete("/:commentIdx/like", (req, res, next) => {
+router.delete("/:commentIdx/like", isLogin, async (req, res, next) => {
     const accountIdx = req.session.accountIdx
     const commentIdx = req.params.commentIdx
 
     try {
-        if (!accountIdx) {
-            throw customError(401, "로그인 필요")
-        } else if (!postIdx) {
-            throw customError(400, "postIdx 값이 안옴")
-        } else if (!commentIdx) {
+        if (!commentIdx) {
             throw customError(400, "commentIdx 값이 안옴")
         }
 
-        if (postIdx != 1) {
-            throw customError(404, "해당 게시물이 존재하지 않음")
-        }
-
-        if (commentIdx != 1) {
+        conn = await pool.getConnection()
+        let rows = await conn.query("SELECT * FROM comment WHERE idx = ?", [commentIdx])
+        if (rows.length === 0) {
             throw customError(404, "해당 댓글이 존재하지 않음")
         }
+
+        rows = await conn.query("SELECT * FROM commentLike WHERE commentIdx = ? AND accountIdx = ?", [commentIdx, accountIdx])
+        if (rows.length === 0) {
+            throw customError(404, "좋아요 누른 유저가 아님")
+        }
+
+        await conn.query("DELETE FROM commentLike WHERE commentIdx = ? AND accountIdx = ?", [commentIdx, accountIdx])
+        await conn.query(`UPDATE comment SET countLike = (
+            SELECT COUNT(*)
+            FROM commentLike 
+            JOIN comment ON commentLike.commentIdx = comment.idx
+            ) WHERE idx = ?`, [commentIdx])
 
         res.status(200).send()
     } catch (err) {
         next(err)
+    } finally {
+        if (conn) return conn.end()
     }
 })
 
