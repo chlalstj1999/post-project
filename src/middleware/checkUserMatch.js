@@ -17,7 +17,7 @@ const checkUserMatch = async (req, res, next) => {
         }
 
         if(rows[0].accountIdx !== accountIdx) {
-            throw customError(403, "해당 유저만 수정 가능")
+            throw customError(403, "해당 유저만 가능")
         }
 
         next()
