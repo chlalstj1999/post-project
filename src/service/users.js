@@ -1,5 +1,5 @@
 const { getAccount, getId, getPw, getIsDuplicateEmail, getIsDuplicateId, 
-    postAccount, getUsersInfo, getUser, putUserRole, getUserInfo, putUserInfo, } = require("../reposityory/users")
+    postAccount, getUsersInfo, getUser, putUserRole, getUserInfo, putUserInfo, deleteUserRepo } = require("../reposityory/users")
 const customError = require("../router/data/error")
 const { idRegx, pwRegx, userNameRegx, emailRegx, genderRegx, birthRegx } = require("../const/regx")
 
@@ -127,8 +127,12 @@ const updateUserInfo = async (accountIdx, userName, email, gender, birth) => {
 
     await putUserInfo(accountIdx, userName, email, gender, birth)
 }
+ 
+const deleteUser = async (accountIdx) => {
+    await deleteUserRepo(accountIdx)
+}
 
 module.exports = { 
     validateLogin, selectId, selectPw, createAccount, 
-    selectUsersInfo, updateUserRole, selectUserInfo, updateUserInfo
+    selectUsersInfo, updateUserRole, selectUserInfo, updateUserInfo, deleteUser
  }
