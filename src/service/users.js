@@ -25,13 +25,29 @@ const selectId = async ( userName, email ) => {
         throw customError(400, "이메일 형식이 잘못됨")
     }
 
-    const account = await getId(userName, email)
+    const idValue = await getId(userName, email)
 
-    if (!account) {
+    if (!idValue) {
         throw customError(404, "계정 정보가 없음")
     }
 
-    return account
+    return idValue
 }
 
-module.exports = { validateLogin, selectId }
+const selectPw = async (userName, idValue) => {
+    if (!userName.match(userNameRegx)) {
+        throw customError(400, "이름 형식이 잘못됨")
+    } else if (!idValue.match(idRegx)) {
+        throw customError(400, "id 형식이 잘못됨")
+    } 
+    
+    const pwValue = await getPw(userName, idValue)
+
+    if (!pwValue) {
+        throw customError(404, "계정 정보가 없음")
+    }
+    
+    return pwValue
+} 
+
+module.exports = { validateLogin, selectId, selectPw }
