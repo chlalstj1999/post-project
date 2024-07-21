@@ -1,4 +1,5 @@
-const { getAccount, getId, getPw, getIsDuplicateEmail, getIsDuplicateId, postAccount, getUsersInfo } = require("../reposityory/users")
+const { getAccount, getId, getPw, getIsDuplicateEmail, getIsDuplicateId, 
+    postAccount, getUsersInfo, getUser, putUserRole } = require("../reposityory/users")
 const customError = require("../router/data/error")
 const { idRegx, pwRegx, userNameRegx, emailRegx, genderRegx, birthRegx } = require("../const/regx")
 
@@ -86,4 +87,18 @@ const selectUsersInfo = async () => {
     return usersInfo
 }
 
-module.exports = { validateLogin, selectId, selectPw, createAccount, selectUsersInfo }
+const updateUserRole = async (userIdx) => {
+    if (!userIdx) {
+        throw customError(400, "userIdx 안 옴")
+    }
+
+    const user = await getUser(userIdx)
+
+    if (!user) {
+        throw customError(404, "해당 user 존재하지 않음")
+    }
+
+    await putUserRole(userIdx)
+}
+
+module.exports = { validateLogin, selectId, selectPw, createAccount, selectUsersInfo, updateUserRole }
