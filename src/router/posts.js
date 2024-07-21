@@ -1,7 +1,7 @@
 const router = require("express").Router()
 const isLogin = require("../middleware/isLogin")
 const isPostUserMatch = require("../middleware/isPostUserMatch")
-const { selectPosts, createPost } = require("../service/posts")
+const { selectPosts, createPost, udpatePost } = require("../service/posts")
 
 let conn = null
 let rows = null
@@ -41,15 +41,7 @@ router.put("/:postIdx", isLogin, isPostUserMatch, async (req, res, next) => {
     const content = req.body.content
 
     try {
-        if (!title.match(postTitleRegx)) {
-            throw customError(400, "제목 형식 확인 필요")
-        } else if (!content.match(postContentRegx)) {
-            throw customError(400, "내용 형식 확인 필요")
-        }
-
-        conn = await pool.getConnection()
-        await conn.query("UPDATE post SET title = ?, content = ? WHERE idx = ?", [title, content, postIdx])
-
+        await udpatePost(postIdx, title, content)
         res.status(200).send()
     } catch (err) {
         next(err)
