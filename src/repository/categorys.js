@@ -12,6 +12,8 @@ const isDuplicateCategory = async (categoryName) => {
     } finally {
         if (conn) conn.end()
     }
+
+    return rows.length !== 0 ? rows : null
 }
 
 const postCategory = async (categoryName) => {
@@ -38,4 +40,42 @@ const getCategorys = async () => {
     return rows.length !== 0 ? rows : null
 }
 
-module.exports = { isDuplicateCategory, postCategory, getCategorys }
+const isCategory = async (categoryIdx) => {
+    try {
+        conn = await pool.getConnection()
+        rows = await conn.query("SELECT * FROM category WHERE idx = ?", [categoryIdx])
+    } catch (err) {
+        console.log(err)
+    } finally {
+        if (conn) conn.end()
+    }
+
+    return rows.length !== 0 ? rows : null
+}
+
+const putCategory = async (categoryIdx, categoryName) => {
+    try {
+        conn = await pool.getConnection()
+        await conn.query("UPDATE category SET name = ? WHERE idx = ?", [categoryName, categoryIdx])
+    } catch (err) {
+        console.log(err)
+    } finally {
+        if (conn) conn.end()
+    }
+}
+
+const deleteCategoryRepo = async (categoryIdx) => {
+    try {
+        conn = await pool.getConnection()
+        rows = await conn.query("DELETE FROM category WHERE idx = ?", [categoryIdx])
+    } catch (err) {
+        console.log(err)
+    } finally {
+        if (conn) conn.end()
+    }
+}
+
+module.exports = { 
+    isDuplicateCategory, postCategory, getCategorys, isCategory,
+    putCategory, deleteCategoryRepo
+ }
