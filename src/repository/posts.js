@@ -56,4 +56,18 @@ const putPost = async (postIdx, title, content) => {
     }
 }
 
-module.exports = { getPosts, createPostRepo, isPost, putPost }
+const getPost = async (postIdx) => {
+    try {
+        conn = await pool.getConnection()
+        rows = await conn.query(`SELECT post.idx AS postIdx, account.name AS userName, post.title, post.content, post.createdAt, post.countLike AS cntPostLike
+            FROM post JOIN account ON post.accountIdx = account.idx WHERE post.idx = ?`, [postIdx])
+    } catch (err) {
+        console.log(err)
+    } finally {
+        if (conn) conn.end()
+    }
+
+    return rows.length !== 0 ? rows : null
+}
+
+module.exports = { getPosts, createPostRepo, isPost, putPost, getPost }
