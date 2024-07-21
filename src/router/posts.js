@@ -1,7 +1,7 @@
 const router = require("express").Router()
 const isLogin = require("../middleware/isLogin")
 const isPostUserMatch = require("../middleware/isPostUserMatch")
-const { selectPosts } = require("../service/posts")
+const { selectPosts, createPost } = require("../service/posts")
 
 let conn = null
 let rows = null
@@ -26,23 +26,7 @@ router.post("/", isLogin, async (req, res, next) => {
     const content = req.body.content
 
     try {
-        if (!categoryIdx) {
-            throw customError(400, "categoryIdx 값이 안옴")
-        } else if (!title.match(postTitleRegx)) {
-            throw customError(400, "제목 형식 확인 필요")
-        } else if (!content.match(postContentRegx)) {
-            throw customError(400, "내용 형식 확인 필요")
-        }
-
-        conn = await pool.getConnection()
-        const rows = await conn.query("SELECT * FROM category WHERE idx = ?", [categoryIdx])
-
-        if (rows.length === 0) {
-            throw customError(404, "해당 카테고리가 존재하지 않음")
-        }
-
-        await conn.query("INSERT INTO post (accountIdx, title, content, categoryIdx, countLike) VALUES (?, ?, ?, ?, ?)", [accountIdx, title, content, categoryIdx, 0])
-
+        await createPost(accountIdx, categoryIdx, title, content)
         res.status(200).send()
     } catch (err) {
         next(err)
