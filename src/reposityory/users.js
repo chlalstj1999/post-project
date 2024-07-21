@@ -98,4 +98,39 @@ const getUsersInfo = async () => {
     return rows.length !== 0 ? rows : null
 }
 
-module.exports = { getAccount, getId, getPw, getIsDuplicateId, getIsDuplicateEmail, postAccount, getUsersInfo }
+const getUser = async (userIdx) => {
+    let rows = null
+
+    try {
+        conn = await pool.getConnection()
+        rows = await conn.query("SELECT roleIdx FROM account WHERE idx = ?", [userIdx])
+    } catch(err) {
+        console.log(err)
+    } finally {
+        if (conn) conn.end()
+    }
+
+    return rows.length !== 0 ? rows : null
+}
+
+const putUserRole = async (userIdx) => {
+    let rows = null
+
+    try {
+        conn = await pool.getConnection()
+        rows = await conn.query("SELECT roleIdx FROM account WHERE idx = ?", [userIdx])
+        
+        if (rows[0].roleIdx === admin) {
+            await conn.query("UPDATE account SET roleIdx = ? WHERE idx = ?", [user, userIdx])
+        } else if (rows[0].roleIdx === user) {
+            await conn.query("UPDATE account SET roleIdx = ? WHERE idx = ?", [admin, userIdx])
+        }
+    } catch(err) {
+        console.log(err)
+    } finally {
+        if (conn) conn.end()
+    }
+   
+}
+
+module.exports = { getAccount, getId, getPw, getIsDuplicateId, getIsDuplicateEmail, postAccount, getUsersInfo, getUser, putUserRole }
