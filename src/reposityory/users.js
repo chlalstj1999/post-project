@@ -154,8 +154,19 @@ const putUserInfo = async (accountIdx, userName, email, gender, birth) => {
     return rows.length !== 0 ? rows : null
 }
 
+const deleteUserRepo = async (accountIdx) => {
+    try {
+        conn = await pool.getConnection()
+        await conn.query("DELETE FROM account WHERE idx = ?", [accountIdx])
+    } catch(err) {
+        console.log(err)
+    } finally {
+        if (conn) conn.end()
+    }
+}
+
 module.exports = { 
     getAccount, getId, getPw, getIsDuplicateId, 
     getIsDuplicateEmail, postAccount, getUsersInfo, getUser, 
-    putUserRole, getUserInfo, putUserInfo 
+    putUserRole, getUserInfo, putUserInfo, deleteUserRepo
 }
