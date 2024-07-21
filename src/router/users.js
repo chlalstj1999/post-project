@@ -3,7 +3,7 @@ const isLogin = require("../middleware/isLogin")
 const isRole = require("../middleware/isRole")
 const { 
     validateLogin, selectId, selectPw, createAccount, 
-    selectUsersInfo, updateUserRole, selectUserInfo, updateUserInfo
+    selectUsersInfo, updateUserRole, selectUserInfo, updateUserInfo, deleteUser
  } = require("../service/users")
 
 let conn
@@ -139,9 +139,7 @@ router.delete("/me", isLogin, async (req, res, next) => {{
     const accountIdx = req.session.accountIdx
 
     try {
-        conn = await pool.getConnection()
-        await conn.query("DELETE FROM account WHERE idx = ?", [accountIdx])
-            
+        await deleteUser(accountIdx)
         res.status(200).send()
     } catch (err) {
         next(err)
