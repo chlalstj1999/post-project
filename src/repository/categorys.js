@@ -1,7 +1,7 @@
 const pool = require("../router/db/mariadb")
 
-let conn
-let rows
+let conn = null
+let rows = null
 
 const isDuplicateCategory = async (categoryName) => {
     try {

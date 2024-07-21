@@ -70,4 +70,14 @@ const getPost = async (postIdx) => {
     return rows.length !== 0 ? rows : null
 }
 
-module.exports = { getPosts, createPostRepo, isPost, putPost, getPost }
+const deletePostRepo = async (postIdx) => {
+    try {
+        conn = await pool.getConnection()
+        await conn.query("DELETE FROM post WHERE idx = ?", [postIdx])
+    } catch (err) {
+        console.log(err)
+    } finally {
+        if (conn) conn.end()
+    }
+}
+module.exports = { getPosts, createPostRepo, isPost, putPost, getPost, deletePostRepo }
