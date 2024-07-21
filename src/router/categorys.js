@@ -1,7 +1,7 @@
 const router = require("express").Router()
 const isLogin = require("../middleware/isLogin")
 const isRole = require("../middleware/isRole")
-const { createCategory } = require("../service/categorys")
+const { createCategory, selectCategory } = require("../service/categorys")
 
 let rows
 
@@ -18,9 +18,7 @@ router.post("/", isLogin, isRole, async (req, res, next) => {
 
 router.get("/", async (req, res, next) => {
     try {    
-        conn = await pool.getConnection()
-        const rows = await conn.query("SELECT idx AS categoryIdx, name AS categoryName FROM category")
-
+        rows = await selectCategory()
         res.status(200).send(rows)
     } catch {
         next(err)
