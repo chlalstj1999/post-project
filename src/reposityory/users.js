@@ -83,4 +83,19 @@ const postAccount = async (userName, idValue, pwValue, email, gender, birth) => 
     }
 }
 
-module.exports = { getAccount, getId, getPw, getIsDuplicateId, getIsDuplicateEmail, postAccount }
+const getUsersInfo = async () => {
+    let rows = null
+
+    try {
+        conn = await pool.getConnection()
+        rows = await conn.query("SELECT account.idx AS userIdx, account.name AS userName, account.id AS idValue, role.name AS roleName FROM account JOIN role ON account.roleIdx = role.idx")
+    } catch(err) {
+        console.log(err)
+    } finally {
+        if (conn) conn.end()
+    }
+
+    return rows.length !== 0 ? rows : null
+}
+
+module.exports = { getAccount, getId, getPw, getIsDuplicateId, getIsDuplicateEmail, postAccount, getUsersInfo }
