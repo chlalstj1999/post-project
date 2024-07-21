@@ -1,9 +1,10 @@
 const pool = require("../router/db/mariadb")
 const { admin, user } = require("../const/role")
-let conn
+
+let conn = null
+let rows = null
 
 const getAccount = async ( idValue, pwValue ) => {
-    let rows = null
     try {
         conn = await pool.getConnection()
         rows = await conn.query("SELECT idx, name, roleIdx FROM account WHERE id = ? AND password = ?", [idValue, pwValue])
@@ -17,7 +18,6 @@ const getAccount = async ( idValue, pwValue ) => {
 }
 
 const getId = async ( userName, email ) => {
-    let rows = null
     try {
         conn = await pool.getConnection()
         rows = await conn.query("SELECT id FROM account WHERE name = ? AND email = ?", [userName, email])
@@ -31,7 +31,6 @@ const getId = async ( userName, email ) => {
 }
 
 const getPw = async ( userName, idValue ) => {
-    let rows = null
     try {
         conn = await pool.getConnection()
         rows = await conn.query("SELECT password FROM account WHERE name = ? AND id = ?", [userName, idValue])
@@ -45,7 +44,6 @@ const getPw = async ( userName, idValue ) => {
 }
 
 const getIsDuplicateId = async (idValue) => {
-    let rows = null
     try {
         conn = await pool.getConnection()
         rows = await conn.query("SELECT id FROM account WHERE id = ?", [idValue])
@@ -58,11 +56,15 @@ const getIsDuplicateId = async (idValue) => {
     return rows.length !== 0 ? rows : null
 }
 
-const getIsDuplicateEmail = async (email) => {
-    let rows = null
+const getIsDuplicateEmail = async (email, accountIdx) => {
     try {
         conn = await pool.getConnection()
-        rows = await conn.query("SELECT email FROM account WHERE email = ?", [email])
+
+        if (!accountIdx) {
+            rows = await conn.query("SELECT email FROM account WHERE email = ?", [email])
+        } else {
+            rows = await conn.query("SELECT email FROM account WHERE email = ? AND idx != ?", [email, accountIdx])
+        }
     } catch(err) {
         console.log(err)
     } finally {
@@ -75,7 +77,7 @@ const getIsDuplicateEmail = async (email) => {
 const postAccount = async (userName, idValue, pwValue, email, gender, birth) => {
     try {
         conn = await pool.getConnection()
-    await conn.query("INSERT INTO account (name, id, password, email, gender, birth, roleIdx) VALUES (?, ?, ?, ?, ?, ?, ?)", [userName, idValue, pwValue, email, gender, birth, user])
+        await conn.query("INSERT INTO account (name, id, password, email, gender, birth, roleIdx) VALUES (?, ?, ?, ?, ?, ?, ?)", [userName, idValue, pwValue, email, gender, birth, user])
     } catch(err) {
         console.log(err)
     } finally {
@@ -84,8 +86,6 @@ const postAccount = async (userName, idValue, pwValue, email, gender, birth) => 
 }
 
 const getUsersInfo = async () => {
-    let rows = null
-
     try {
         conn = await pool.getConnection()
         rows = await conn.query("SELECT account.idx AS userIdx, account.name AS userName, account.id AS idValue, role.name AS roleName FROM account JOIN role ON account.roleIdx = role.idx")
@@ -99,8 +99,6 @@ const getUsersInfo = async () => {
 }
 
 const getUser = async (userIdx) => {
-    let rows = null
-
     try {
         conn = await pool.getConnection()
         rows = await conn.query("SELECT roleIdx FROM account WHERE idx = ?", [userIdx])
@@ -114,8 +112,6 @@ const getUser = async (userIdx) => {
 }
 
 const putUserRole = async (userIdx) => {
-    let rows = null
-
     try {
         conn = await pool.getConnection()
         rows = await conn.query("SELECT roleIdx FROM account WHERE idx = ?", [userIdx])
@@ -130,7 +126,36 @@ const putUserRole = async (userIdx) => {
     } finally {
         if (conn) conn.end()
     }
-   
 }
 
-module.exports = { getAccount, getId, getPw, getIsDuplicateId, getIsDuplicateEmail, postAccount, getUsersInfo, getUser, putUserRole }
+const getUserInfo = async (accountIdx) => {
+    try {
+        conn = await pool.getConnection()
+        rows = await conn.query("SELECT name AS userName, email, gender, birth FROM account WHERE idx=?", [accountIdx])
+    } catch(err) {
+        console.log(err)
+    } finally {
+        if (conn) conn.end()
+    }
+
+    return rows.length !== 0 ? rows : null
+}
+
+const putUserInfo = async (accountIdx, userName, email, gender, birth) => {
+    try {
+        conn = await pool.getConnection()
+        rows = await conn.query("UPDATE account SET name = ?, email = ?, gender = ?, birth = ? WHERE idx = ?", [userName, email, gender, birth, accountIdx])
+    } catch(err) {
+        console.log(err)
+    } finally {
+        if (conn) conn.end()
+    }
+
+    return rows.length !== 0 ? rows : null
+}
+
+module.exports = { 
+    getAccount, getId, getPw, getIsDuplicateId, 
+    getIsDuplicateEmail, postAccount, getUsersInfo, getUser, 
+    putUserRole, getUserInfo, putUserInfo 
+}
