@@ -1,7 +1,7 @@
 const router = require("express").Router()
 const isLogin = require("../middleware/isLogin")
 const isCommentUserMatch = require("../middleware/isCommentUserMatch")
-const { createComment, updateComment } = require("../service/comments")
+const { createComment, updateComment, selectComments, deleteComment } = require("../service/comments")
 
 let rows = null
 
@@ -34,23 +34,10 @@ router.get("/", async(req, res, next) => {
     const postIdx = req.body.postIdx
     
     try {
-        if (!postIdx) {
-            throw customError(400, "postIdx 값이 안옴")
-        }
-        
-        conn = await pool.getConnection()
-        const rows = await conn.query(`SELECT comment.idx AS commentIdx, account.name AS userName, comment.content AS comment, comment.createdAt, comment.countLike AS cntCommentLike
-            FROM comment JOIN account ON comment.accountIdx = account.idx WHERE comment.postIdx = ? ORDER BY comment.createdAt DESC`, [postIdx])
-
-        if (rows.length === 0) {
-            throw customError(404, "해당 댓글이 존재하지 않음")
-        }
-
+        rows = await selectComments(postIdx)
         res.status(200).send(rows)
     } catch (err) {
         next(err)
-    } finally {
-        if (conn) return conn.end()
     }
 })
 
@@ -58,14 +45,10 @@ router.delete("/:commentIdx", isLogin, isCommentUserMatch, async (req, res, next
     const commentIdx = req.params.commentIdx
 
     try {
-        conn = await pool.getConnection()
-        await conn.query("DELETE FROM comment WHERE idx = ?", [commentIdx])
-
+        await deleteComment(commentIdx)
         res.status(200).send()
     } catch (err) {
         next(err)
-    } finally {
-        if (conn) return conn.end()
     }
 })
 
