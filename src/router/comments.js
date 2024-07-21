@@ -1,10 +1,9 @@
 const router = require("express").Router()
-const customError = require("./data/error")
-const { commentRegx } = require("../const/regx")
 const isLogin = require("../middleware/isLogin")
 const isCommentUserMatch = require("../middleware/isCommentUserMatch")
-const pool = require("./db/mariadb")
-let conn
+const { createComment } = require("../service/comments")
+
+let rows = null
 
 router.post("/", isLogin, async (req, res, next) => {
     const accountIdx = req.session.accountIdx
@@ -12,27 +11,10 @@ router.post("/", isLogin, async (req, res, next) => {
     const comment = req.body.comment
 
     try {
-        if (!postIdx) {
-            throw customError(400, "postIdx 값이 안옴")
-        } else if (!comment.match(commentRegx)) {
-            throw customError(400, "댓글 형식 확인 필요")
-        }
-
-        conn = await pool.getConnection()
-        const rows = await conn.query("SELECT * FROM post WHERE idx = ?", [postIdx])
-
-        if (rows.length === 0) {
-            throw customError(404, "해당 게시물이 존재하지 않음")
-        }
-
-        await conn.query("INSERT INTO comment (postIdx, accountIdx, content, countLike) VALUES (?, ?, ?, ?)", [postIdx, accountIdx, comment, 0])
-
+        await createComment(accountIdx, postIdx, comment)
         res.status(200).send()
-
     } catch (err) {
         next(err)
-    } finally {
-        if (conn) return conn.end()
     }
 })
 
@@ -65,7 +47,7 @@ router.get("/", async(req, res, next) => {
         }
         
         conn = await pool.getConnection()
-        const rows = await conn.query(`SELECT comment.idx AS commentIdx, account.name AS userName, comment.content, comment.createdAt, comment.countLike AS cntCommentLike
+        const rows = await conn.query(`SELECT comment.idx AS commentIdx, account.name AS userName, comment.content AS comment, comment.createdAt, comment.countLike AS cntCommentLike
             FROM comment JOIN account ON comment.accountIdx = account.idx WHERE comment.postIdx = ? ORDER BY comment.createdAt DESC`, [postIdx])
 
         if (rows.length === 0) {
