@@ -1,6 +1,6 @@
 const { categoryNameRegx } = require("../const/regx")
 const customError = require("../router/data/error")
-const { isDuplicateCategory, postCategory } = require("../repository/categorys")
+const { isDuplicateCategory, postCategory, getCategorys } = require("../repository/categorys")
 
 let rows
 
@@ -18,4 +18,10 @@ const createCategory = async (categoryName) => {
     await postCategory(categoryName)
 }
 
-module.exports = { createCategory }
+const selectCategory = async () => {
+    rows = await getCategorys()
+
+    return rows
+}
+
+module.exports = { createCategory, selectCategory }
