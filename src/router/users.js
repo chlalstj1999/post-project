@@ -3,9 +3,8 @@ const { idRegx, pwRegx, userNameRegx, emailRegx, genderRegx, birthRegx } = requi
 const isLogin = require("../middleware/isLogin")
 const isRole = require("../middleware/isRole")
 const customError = require("./data/error")
-const { admin, user } = require("../const/role")
 const pool = require("./db/mariadb")
-const { validateLogin, selectId, selectPw, createAccount } = require("../service/users")
+const { validateLogin, selectId, selectPw, createAccount, selectUsersInfo } = require("../service/users")
 
 let conn
 
@@ -15,7 +14,7 @@ router.post("/login", async (req, res, next) => {
 
     try {
        const account = await validateLogin(idValue, pwValue)
-        
+
        req.session.accountIdx = account[0].idx
        req.session.name = account[0].name
        req.session.roleIdx = account[0].roleIdx
@@ -46,8 +45,6 @@ router.get("/find/id", async (req, res, next) => {
         })
     } catch (err) {
         next(err)
-    } finally {
-        if (conn) return conn.end()
     }
 })
 
@@ -63,8 +60,6 @@ router.get("/find/pw", async (req, res, next) => {
         })
     } catch (err) {
         next(err)
-    } finally {
-        if (conn) return conn.end()
     }
 })
 
@@ -89,21 +84,16 @@ router.post("/", async (req, res, next) => {
         // develop / production -> if (모두가 develope일때만 실행) -> 환경변수로 해보기
     } catch (err) {
         next(err)
-    } finally {
-        if (conn) return conn.end()
     }
 })
 
 router.get("/", isLogin, isRole, async (req, res, next) => {
     try {
-        conn = await pool.getConnection()
-        const rows = await conn.query("SELECT account.idx AS userIdx, account.name AS userName, account.id AS idValue, role.name AS roleName FROM account JOIN role ON account.roleIdx = role.idx")
+        const usersInfo = await selectUsersInfo()
 
-        res.status(200).send(rows)
+        res.status(200).send(usersInfo)
     } catch (err) {
         next(err)
-    } finally {
-        if (conn) return conn.end()
     }
 })
 
