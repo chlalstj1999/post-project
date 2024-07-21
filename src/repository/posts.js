@@ -21,4 +21,15 @@ const getPosts = async (categoryIdx) => {
     return rows.length !== 0 ? rows : null
 }
 
-module.exports = { getPosts }
+const createPostRepo = async (accountIdx, categoryIdx, title, content) => {
+    try {
+        conn = await pool.getConnection()
+        await conn.query("INSERT INTO post (accountIdx, title, content, categoryIdx, countLike) VALUES (?, ?, ?, ?, ?)", [accountIdx, title, content, categoryIdx, 0])
+    } catch (err) {
+        console.log(err)
+    } finally {
+        if (conn) conn.end()
+    }
+}
+
+module.exports = { getPosts, createPostRepo }
