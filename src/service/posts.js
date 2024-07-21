@@ -1,6 +1,6 @@
 const { postTitleRegx, postContentRegx } = require("../const/regx")
 const customError = require("../router/data/error")
-const { getPosts, createPostRepo, isPost, putPost, getPost } = require("../repository/posts")
+const { getPosts, createPostRepo, isPost, putPost, getPost, deletePostRepo } = require("../repository/posts")
 const { isCategory } = require("../repository/categorys")
 
 let rows = null
@@ -66,4 +66,17 @@ const selectPost = async (postIdx) => {
     return rows
 }
 
-module.exports = { selectPosts, createPost, udpatePost, selectPost }
+const deletePost = async (postIdx) => {
+    if (!postIdx) {
+        throw customError(400, "postIdx 값이 안옴")
+    }
+
+    rows = await isPost(postIdx)
+    if (!rows) {
+        throw customError(404, "해당 게시물이 존재하지 않음")
+    }
+
+    await deletePostRepo(postIdx)
+}
+
+module.exports = { selectPosts, createPost, udpatePost, selectPost, deletePost }
