@@ -32,4 +32,28 @@ const createPostRepo = async (accountIdx, categoryIdx, title, content) => {
     }
 }
 
-module.exports = { getPosts, createPostRepo }
+const isPost = async (postIdx) => {
+    try {
+        conn = await pool.getConnection()
+        rows = await conn.query(`SELECT idx FROM post WHERE idx = ?`, [postIdx])
+    } catch (err) {
+        console.log(err)
+    } finally {
+        if (conn) conn.end()
+    }
+
+    return rows.length !== 0 ? rows : null
+}
+
+const putPost = async (postIdx, title, content) => {
+    try {
+        conn = await pool.getConnection()
+        await conn.query("UPDATE post SET title = ?, content = ? WHERE idx = ?", [title, content, postIdx])
+    } catch (err) {
+        console.log(err)
+    } finally {
+        if (conn) conn.end()
+    }
+}
+
+module.exports = { getPosts, createPostRepo, isPost, putPost }
