@@ -1,7 +1,7 @@
 const router = require("express").Router()
 const isLogin = require("../middleware/isLogin")
 const isCommentUserMatch = require("../middleware/isCommentUserMatch")
-const { createComment } = require("../service/comments")
+const { createComment, updateComment } = require("../service/comments")
 
 let rows = null
 
@@ -23,18 +23,10 @@ router.put("/:commentIdx", isLogin, isCommentUserMatch, async (req, res, next) =
     const comment = req.body.comment
 
     try {
-        if (!comment.match(commentRegx)) {
-            throw customError(400, "댓글 형식 확인 필요")
-        }
-
-        conn = await pool.getConnection()
-        await conn.query("UPDATE comment SET content = ? WHERE idx = ?", [comment, commentIdx])
-
+        await updateComment(commentIdx, comment)
         res.status(200).send()
     } catch (err) {
         next(err)
-    } finally {
-        if (conn) return conn.end()
     }
 })
 
@@ -51,7 +43,7 @@ router.get("/", async(req, res, next) => {
             FROM comment JOIN account ON comment.accountIdx = account.idx WHERE comment.postIdx = ? ORDER BY comment.createdAt DESC`, [postIdx])
 
         if (rows.length === 0) {
-            throw customError(404, "해당 게시물이 존재하지 않음")
+            throw customError(404, "해당 댓글이 존재하지 않음")
         }
 
         res.status(200).send(rows)
