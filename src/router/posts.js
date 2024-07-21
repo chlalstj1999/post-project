@@ -1,7 +1,7 @@
 const router = require("express").Router()
 const isLogin = require("../middleware/isLogin")
 const isPostUserMatch = require("../middleware/isPostUserMatch")
-const { selectPosts, createPost, udpatePost } = require("../service/posts")
+const { selectPosts, createPost, udpatePost, selectPost, deletePost } = require("../service/posts")
 
 let conn = null
 let rows = null
@@ -14,8 +14,6 @@ router.get("/list", async (req, res, next) => {
         res.status(200).send(rows)
     } catch (err) {
         next(err)
-    } finally {
-        if (conn) return conn.end()
     }
 }) 
 
@@ -30,8 +28,6 @@ router.post("/", isLogin, async (req, res, next) => {
         res.status(200).send()
     } catch (err) {
         next(err)
-    } finally {
-        if (conn) return conn.end()
     }
 })
 
@@ -45,8 +41,6 @@ router.put("/:postIdx", isLogin, isPostUserMatch, async (req, res, next) => {
         res.status(200).send()
     } catch (err) {
         next(err)
-    } finally {
-        if (conn) return conn.end()
     }
 })
 
@@ -54,23 +48,10 @@ router.get("/:postIdx", async (req, res, next) => {
     const postIdx = req.params.postIdx
     
     try {
-        if (!postIdx) {
-            throw customError(400, "postIdx 값이 안옴")
-        }
-
-        conn = await pool.getConnection()
-        const rows = await conn.query(`SELECT post.idx AS postIdx, account.name AS userName, post.title, post.content, post.createdAt, post.countLike AS cntPostLike
-            FROM post JOIN account ON post.accountIdx = account.idx WHERE post.idx = ?`, [postIdx])
-
-        if (rows.length === 0) {
-            throw customError(404, "해당 게시물이 존재하지 않음")
-        }
-
+        rows = await selectPost(postIdx) 
         res.status(200).send(rows)
     } catch (err) {
         next(err)
-    } finally {
-        if (conn) return conn.end()
     }
 })
 
@@ -78,14 +59,10 @@ router.delete("/:postIdx", isLogin, isPostUserMatch, async (req, res, next) => {
     const postIdx = req.params.postIdx
 
     try {
-        conn = await pool.getConnection()
-        await conn.query("DELETE FROM post WHERE idx = ?", [postIdx])
-
+        await deletePost(postIdx)
         res.status(200).send()
     } catch (err) {
         next(err)
-    } finally {
-        if (conn) return conn.end()
     }
 })
 
