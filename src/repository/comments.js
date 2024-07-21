@@ -38,4 +38,29 @@ const putComment = async (commentIdx, comment) => {
     }
 }
 
-module.exports = { postComment, isComment, putComment }
+const getComments = async (postIdx) => {
+    try {
+        conn = await pool.getConnection()
+        rows = await conn.query(`SELECT comment.idx AS commentIdx, account.name AS userName, comment.content AS comment, comment.createdAt, comment.countLike AS cntCommentLike
+            FROM comment JOIN account ON comment.accountIdx = account.idx WHERE comment.postIdx = ? ORDER BY comment.createdAt DESC`, [postIdx])
+    } catch (err) {
+        console.log(err)
+    } finally {
+        if (conn) conn.end()
+    }
+
+    return rows.length !== 0 ? rows : null
+}
+
+const deleteCommentRepo = async (commentIdx) => {
+    try {
+        conn = await pool.getConnection()
+        await conn.query("DELETE FROM comment WHERE idx = ?", [commentIdx])
+    } catch (err) {
+        console.log(err)
+    } finally {
+        if (conn) conn.end()
+    }
+}
+
+module.exports = { postComment, isComment, putComment, getComments, deleteCommentRepo }
