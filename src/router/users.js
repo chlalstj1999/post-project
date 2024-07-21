@@ -5,7 +5,7 @@ const isRole = require("../middleware/isRole")
 const customError = require("./data/error")
 const { admin, user } = require("../const/role")
 const pool = require("./db/mariadb")
-const { validateLogin } = require("../service/users")
+const { validateLogin, findId, selectId } = require("../service/users")
 
 let conn
 
@@ -39,22 +39,11 @@ router.get("/find/id", async (req, res, next) => {
     const email = req.body.email
 
     try {
-        if (!userName.match(userNameRegx)) {
-            throw customError(400, "이름 형식이 잘못됨")
-        } else if (!email.match(emailRegx)) {
-            throw customError(400, "이메일 형식이 잘못됨")
-        } 
-        
-        conn = await pool.getConnection()
-        const rows = await conn.query("SELECT id FROM account WHERE name = ? AND email = ?", [userName, email])
+        const rows = await selectId(userName, email)
 
-        if (rows.length === 0) {
-            throw customError(404, "계정 정보가 없음")
-        } else {
-            res.status(200).send({
-                "idValue" : rows[0].id
-            })
-        }
+        res.status(200).send({
+            "idValue" : rows[0].id
+        })
     } catch (err) {
         next(err)
     } finally {
