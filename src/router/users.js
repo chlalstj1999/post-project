@@ -5,7 +5,7 @@ const isRole = require("../middleware/isRole")
 const customError = require("./data/error")
 const { admin, user } = require("../const/role")
 const pool = require("./db/mariadb")
-const { validateLogin, selectId, selectPw } = require("../service/users")
+const { validateLogin, selectId, selectPw, createAccount } = require("../service/users")
 
 let conn
 
@@ -77,34 +77,7 @@ router.post("/", async (req, res, next) => {
     const birth = req.body.birth
 
     try {
-        if (!userName.match(userNameRegx)) {
-            throw customError(400, "이름 형식이 잘못됨")
-        } else if (!idValue.match(idRegx)) {
-            throw customError(400, "아이디 형식이 잘못됨")
-        } else if (!pwValue.match(pwRegx)) {
-            throw customError(400, "비밀번호 형식이 잘못됨")
-        } else if (!email.match(emailRegx)) {
-            throw customError(400, "이메일 형식이 잘못됨")
-        } else if (!gender.match(genderRegx)) {
-            throw customError(400, "성별 형식이 잘못됨")
-        } else if (!birth.match(birthRegx)) {
-            throw customError(400, "생일 형식이 잘못됨")
-        }
-
-        conn = await pool.getConnection()
-        let rows = await conn.query("SELECT * FROM account WHERE id = ?", [idValue])
-
-        if (rows.length !== 0) {
-            throw customError(409, "아이디 중복")
-        }
-
-        rows = await conn.query("SELECT * FROM account WHERE email = ?", [email])
-
-        if (rows.length !== 0) {
-            throw customError(409, "이메일 중복")
-        }
-        
-        await conn.query("INSERT INTO account (name, id, password, email, gender, birth, roleIdx) VALUES (?, ?, ?, ?, ?, ?, ?)", [userName, idValue, pwValue, email, gender, birth, user])
+        await createAccount(userName, idValue, pwValue, email, gender, birth)
         res.status(200).send()
         // console.log(`userName : ${userName}`)
         // console.log(`idValue : ${idValue}`)
