@@ -1,32 +1,16 @@
 const router = require("express").Router()
-const customError = require("./data/error")
-const { postTitleRegx, postContentRegx } = require("../const/regx")
-const pool = require("./db/mariadb")
 const isLogin = require("../middleware/isLogin")
 const isPostUserMatch = require("../middleware/isPostUserMatch")
+const { selectPosts } = require("../service/posts")
 
-let conn
+let conn = null
+let rows = null
 
 router.get("/list", async (req, res, next) => {
     const categoryIdx = req.query.categoryIdx
 
     try {
-        if (!categoryIdx) {
-            throw customError(400, "categoryIdx 값이 없음")
-        }
-        
-        conn = await pool.getConnection()
-        let rows = await conn.query("SELECT * FROM category WHERE idx = ?", [categoryIdx])
-
-        if (rows.length === 0) {
-            throw customError(404, "해당 카테고리가 존재하지 않음")
-        }
-
-        rows = await conn.query(`SELECT post.idx AS postIdx, account.name AS userName, post.title, post.createdAt 
-            FROM post 
-            JOIN account 
-            ON accountIdx = account.idx ORDER BY post.createdAt DESC`)
-
+        rows = await selectPosts(categoryIdx)
         res.status(200).send(rows)
     } catch (err) {
         next(err)
