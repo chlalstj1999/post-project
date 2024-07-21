@@ -1,6 +1,6 @@
-const { getAccount, getId, getPw } = require("../reposityory/users")
+const { getAccount, getId, getPw, getIsDuplicateEmail, getIsDuplicateId, postAccount } = require("../reposityory/users")
 const customError = require("../router/data/error")
-const { idRegx, pwRegx, userNameRegx, emailRegx } = require("../const/regx")
+const { idRegx, pwRegx, userNameRegx, emailRegx, genderRegx, birthRegx } = require("../const/regx")
 
 const validateLogin = async ( idValue, pwValue ) => {
     if (!idValue.match(idRegx)) {
@@ -25,13 +25,13 @@ const selectId = async ( userName, email ) => {
         throw customError(400, "이메일 형식이 잘못됨")
     }
 
-    const idValue = await getId(userName, email)
+    const account = await getId(userName, email)
 
-    if (!idValue) {
+    if (!account) {
         throw customError(404, "계정 정보가 없음")
     }
 
-    return idValue
+    return account
 }
 
 const selectPw = async (userName, idValue) => {
@@ -41,13 +41,43 @@ const selectPw = async (userName, idValue) => {
         throw customError(400, "id 형식이 잘못됨")
     } 
     
-    const pwValue = await getPw(userName, idValue)
+    const account = await getPw(userName, idValue)
 
-    if (!pwValue) {
+    if (!account) {
         throw customError(404, "계정 정보가 없음")
     }
     
-    return pwValue
-} 
+    return account
+}
 
-module.exports = { validateLogin, selectId, selectPw }
+const createAccount = async (userName, idValue, pwValue, email, gender, birth) => {
+    if (!userName.match(userNameRegx)) {
+        throw customError(400, "이름 형식이 잘못됨")
+    } else if (!idValue.match(idRegx)) {
+        throw customError(400, "아이디 형식이 잘못됨")
+    } else if (!pwValue.match(pwRegx)) {
+        throw customError(400, "비밀번호 형식이 잘못됨")
+    } else if (!email.match(emailRegx)) {
+        throw customError(400, "이메일 형식이 잘못됨")
+    } else if (!gender.match(genderRegx)) {
+        throw customError(400, "성별 형식이 잘못됨")
+    } else if (!birth.match(birthRegx)) {
+        throw customError(400, "생일 형식이 잘못됨")
+    }
+
+    let account = await getIsDuplicateId(idValue)
+
+    if (account) {
+        throw customError(409, "아이디 중복")
+    }
+
+    account = await getIsDuplicateEmail(email)
+
+    if (account) {
+        throw customError(409, "이메일 중복")
+    }
+
+    await postAccount(userName, idValue, pwValue, email, gender, birth)
+}
+
+module.exports = { validateLogin, selectId, selectPw, createAccount }
