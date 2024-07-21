@@ -5,6 +5,7 @@ const isRole = require("../middleware/isRole")
 const customError = require("./data/error")
 const { admin, user } = require("../const/role")
 const pool = require("./db/mariadb")
+const { validateLogin } = require("../service/users")
 
 let conn
 
@@ -13,30 +14,14 @@ router.post("/login", async (req, res, next) => {
     const pwValue = req.body.pwValue
 
     try {
-        if (!idValue.match(idRegx)) {
-            throw customError(400, "아이디 형식이 잘못됨")
-        } else if (!pwValue.match(pwRegx)) {
-            throw customError(400, "비밀번호 형식이 잘못됨")
-        } 
+       const account = await validateLogin(idValue, pwValue)
         
-        conn = await pool.getConnection()
-        const rows = await conn.query("SELECT idx, name, roleIdx FROM account WHERE id = ? AND password = ?", [idValue, pwValue])
-
-        if (rows.length === 0) {
-            throw customError(404, "해당하는 계정 정보가 없습니다")
-        } else {
-            req.session.accountIdx = rows[0].idx
-            req.session.name = rows[0].name
-            req.session.roleIdx = rows[0].roleIdx
-            res.status(200).send()
-            console.log(req.session.accountIdx)
-            console.log(req.session.name)
-            console.log(req.session.roleIdx)
-        }
+       req.session.accountIdx = account[0].idx
+       req.session.name = account[0].name
+       req.session.roleIdx = account[0].roleIdx
+       res.status(200).send()
     } catch (err) {
         next(err)
-    } finally {
-        if (conn) return conn.end()
     }
 })
 
