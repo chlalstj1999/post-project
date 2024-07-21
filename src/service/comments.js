@@ -1,7 +1,7 @@
 const customError = require("../router/data/error")
 const { commentRegx } = require("../const/regx")
 const { isPost } = require("../repository/posts")
-const { postComment, isComment, putComment } = require("../repository/comments")
+const { postComment, isComment, putComment, getComments, deleteCommentRepo } = require("../repository/comments")
 
 let rows = null
 
@@ -33,4 +33,23 @@ const updateComment = async (commentIdx, comment) => {
     await putComment(commentIdx, comment)
 }
 
-module.exports = { createComment, updateComment }
+const selectComments = async (postIdx) => {
+    if (!postIdx) {
+        throw customError(400, "postIdx 값이 안옴")
+    }
+
+    rows = await isPost(postIdx)
+    if (!rows) {
+        throw customError(404, "해당 게시물이 존재하지 않음")
+    }
+
+    rows = await getComments(postIdx)
+
+    return rows
+}
+
+const deleteComment = async (commentIdx) => {
+    await deleteCommentRepo(commentIdx)
+}
+
+module.exports = { createComment, updateComment, selectComments, deleteComment }
