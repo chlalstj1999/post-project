@@ -1,34 +1,18 @@
 const router = require("express").Router()
-const { categoryNameRegx } = require("../const/regx")
-const customError = require("./data/error")
 const isLogin = require("../middleware/isLogin")
 const isRole = require("../middleware/isRole")
-const pool = require("./db/mariadb")
+const { createCategory } = require("../service/categorys")
 
-let conn
+let rows
 
 router.post("/", isLogin, isRole, async (req, res, next) => {
     const categoryName = req.body.categoryName
 
     try{
-        if (!categoryName.match(categoryNameRegx)) {
-            throw customError(401, "카테고리 이름 형식 확인 필요")
-        }
-        
-        conn = await pool.getConnection()
-        const rows = await conn.query("SELECT name FROM category WHERE name = ?", [categoryName])
-
-        if (rows.length !== 0) {
-            throw customError(409, "카테고리가 이미 있음")
-        }
-
-        await conn.query("INSERT INTO category (name) VALUES (?)", [categoryName])
-
+        await createCategory(categoryName)
         res.status(200).send()
     } catch (err) {
         next(err)
-    } finally {
-        if (conn) return conn.end()
     }
 })
 
@@ -40,8 +24,6 @@ router.get("/", async (req, res, next) => {
         res.status(200).send(rows)
     } catch {
         next(err)
-    } finally {
-        if (conn) return conn.end()
     }
 })
 
@@ -74,8 +56,6 @@ router.put("/:categoryIdx", isLogin, isRole, async (req, res, next) => {
         res.status(200).send()
     } catch (err) {
         next(err)
-    } finally {
-        if (conn) return conn.end()
     }
 })
 
@@ -99,8 +79,6 @@ router.delete("/:categoryIdx", isLogin, isRole, async (req, res, next) => {
         res.status(200).send()
     } catch (err) {
         next(err)
-    } finally {
-        if (conn) return conn.end()
     }
 })
 
