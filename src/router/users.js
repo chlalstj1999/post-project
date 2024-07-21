@@ -4,7 +4,9 @@ const isLogin = require("../middleware/isLogin")
 const isRole = require("../middleware/isRole")
 const customError = require("./data/error")
 const pool = require("./db/mariadb")
-const { validateLogin, selectId, selectPw, createAccount, selectUsersInfo } = require("../service/users")
+const { validateLogin, selectId, selectPw, createAccount, selectUsersInfo,
+    updateUserRole
+ } = require("../service/users")
 
 let conn
 
@@ -101,28 +103,10 @@ router.put("/:userIdx/auth", isLogin, isRole, async(req, res, next) => {
     const userIdx = req.params.userIdx
 
     try {
-        if (!userIdx) {
-            throw customError(400, "userIdx 안 옴")
-        }
-
-        conn = await pool.getConnection()
-        const rows = await conn.query("SELECT roleIdx FROM account WHERE idx = ?", [userIdx])
-
-        if (rows.length === 0) {
-            throw customError(404, "해당 user 존재하지 않음")
-        } 
-
-        if (rows[0].roleIdx === admin) {
-            await conn.query("UPDATE account SET roleIdx = ? WHERE idx = ?", [user, userIdx])
-        } else if (rows[0].roleIdx === user) {
-            await conn.query("UPDATE account SET roleIdx = ? WHERE idx = ?", [admin, userIdx])
-        }
-        
+        await updateUserRole(userIdx) 
         res.status(200).send()
     } catch (err) {
         next(err)
-    } finally {
-        if (conn) return conn.end()
     }
 })
 
