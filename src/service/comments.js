@@ -1,52 +1,60 @@
 const customError = require("../router/data/error")
-const { isPost } = require("../repository/posts")
-const { postComment, isComment, putComment, getComments, deleteCommentRepo, isCommentLike, commentLikeRepo, commentUnlikeRepo } = require("../repository/comments")
+const postRepository = require("../repository/posts")
+const commentRepository = require("../repository/comments")
 
 const createComment = async (accountIdx, postIdx, comment) => {
-    const post = await isPost(postIdx)
+    const post = await postRepository.isPost(postIdx)
     if (!post) {
         throw customError(404, "해당 게시물이 존재하지 않음")
     }
 
-    await postComment(accountIdx, postIdx, comment)
+    await commentRepository.postComment(accountIdx, postIdx, comment)
 }
 
 const updateComment = async (commentIdx, comment) => {
-    const comment = await isComment(commentIdx)
-    if (!comment) {
+    const existingComment = await commentRepository.isComment(commentIdx)
+    if (!existingComment) {
         throw customError(404, "해당 댓글이 존재하지 않음")
     }
 
-    await putComment(commentIdx, comment)
+    await commentRepository.putComment(commentIdx, comment)
 }
 
 const selectComments = async (postIdx) => {
-    const post = await isPost(postIdx)
+    const post = await postRepository.isPost(postIdx)
     if (!post) {
         throw customError(404, "해당 게시물이 존재하지 않음")
     }
 
-    const comments = await getComments(postIdx)
+    const comments = await commentRepository.getComments(postIdx)
 
     return comments
 }
 
 const deleteComment = async (commentIdx) => {
-    await deleteCommentRepo(commentIdx)
+    await commentRepository.deleteCommentRepo(commentIdx)
 }
 
 const commentLike = async (accountIdx, commentIdx) => {
-    const comment = await isComment(commentIdx)
+    const comment = await commentRepository.isComment(commentIdx)
     if (!comment) {
         throw customError(404, "해당 댓글이 존재하지 않음")
     }
 
-    const iscommentLike = await isCommentLike(accountIdx, commentIdx)
+    const iscommentLike = await commentRepository.isCommentLike(accountIdx, commentIdx)
     if (!iscommentLike) {
-        await commentLikeRepo(accountIdx, commentIdx)
+        await commentRepository.commentLikeRepo(accountIdx, commentIdx)
     } else {
-        await commentUnlikeRepo(accountIdx, commentIdx)
+        await commentRepository.commentUnlikeRepo(accountIdx, commentIdx)
     }
 }
 
-module.exports = { createComment, updateComment, selectComments, deleteComment, commentLike }
+const commentService = {
+    createComment : createComment,
+    updateComment : updateComment,
+    selectComments : selectComments,
+    deleteComment : deleteComment,
+    commentLike : commentLike
+}
+
+module.exports = commentService
