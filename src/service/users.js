@@ -1,80 +1,45 @@
 const { getAccount, getId, getPw, getIsDuplicateEmail, getIsDuplicateId, 
-    postAccount, getUsersInfo, getUser, putUserRole, getUserInfo, putUserInfo, deleteUserRepo } = require("../reposityory/users")
+    postAccount, getUsersInfo, getUser, putUserRole, getUserInfo, putUserInfo, deleteUserRepo } = require("../repository/users")
 const customError = require("../router/data/error")
-const { idRegx, pwRegx, userNameRegx, emailRegx, genderRegx, birthRegx } = require("../const/regx")
-
-let rows = null
 
 const validateLogin = async ( idValue, pwValue ) => {
-    if (!idValue.match(idRegx)) {
-        throw customError(400, "아이디 형식이 잘못됨")
-    } else if (!pwValue.match(pwRegx)) {
-        throw customError(400, "비밀번호 형식이 잘못됨")
-    }
+    const account = await getAccount(idValue, pwValue)
 
-    rows = await getAccount(idValue, pwValue)
-
-    if (!rows) {
+    if (!account) {
         throw customError(404, "해당하는 계정 정보가 없습니다")
     }
 
-    return rows
+    return account
 }
 
 const selectId = async ( userName, email ) => {
-    if (!userName.match(userNameRegx)) {
-        throw customError(400, "이름 형식이 잘못됨")
-    } else if (!email.match(emailRegx)) {
-        throw customError(400, "이메일 형식이 잘못됨")
-    }
+    const account = await getId(userName, email)
 
-    rows = await getId(userName, email)
-
-    if (!rows) {
+    if (!account) {
         throw customError(404, "계정 정보가 없음")
     }
 
-    return rows
+    return account
 }
 
 const selectPw = async (userName, idValue) => {
-    if (!userName.match(userNameRegx)) {
-        throw customError(400, "이름 형식이 잘못됨")
-    } else if (!idValue.match(idRegx)) {
-        throw customError(400, "id 형식이 잘못됨")
-    } 
-    
-    rows = await getPw(userName, idValue)
+    const account = await getPw(userName, idValue)
 
-    if (!rows) {
+    if (!account) {
         throw customError(404, "계정 정보가 없음")
     }
     
-    return rows
+    return account
 }
 
 const createAccount = async (userName, idValue, pwValue, email, gender, birth) => {
-    if (!userName.match(userNameRegx)) {
-        throw customError(400, "이름 형식이 잘못됨")
-    } else if (!idValue.match(idRegx)) {
-        throw customError(400, "아이디 형식이 잘못됨")
-    } else if (!pwValue.match(pwRegx)) {
-        throw customError(400, "비밀번호 형식이 잘못됨")
-    } else if (!email.match(emailRegx)) {
-        throw customError(400, "이메일 형식이 잘못됨")
-    } else if (!gender.match(genderRegx)) {
-        throw customError(400, "성별 형식이 잘못됨")
-    } else if (!birth.match(birthRegx)) {
-        throw customError(400, "생일 형식이 잘못됨")
-    }
+    let duplicatedUser = await getIsDuplicateId(idValue)
 
-    rows = await getIsDuplicateId(idValue)
-
-    if (rows) {
+    if (duplicatedUser) {
         throw customError(409, "아이디 중복")
     }
 
-    rows = await getIsDuplicateEmail(email)
+    duplicatedUser = await getIsDuplicateEmail(email)
 
     if (rows) {
         throw customError(409, "이메일 중복")
@@ -90,13 +55,9 @@ const selectUsersInfo = async () => {
 }
 
 const updateUserRole = async (userIdx) => {
-    if (!userIdx) {
-        throw customError(400, "userIdx 안 옴")
-    }
+    const users = await getUser(userIdx)
 
-    rows = await getUser(userIdx)
-
-    if (!rows) {
+    if (!users) {
         throw customError(404, "해당 user 존재하지 않음")
     }
 
@@ -104,24 +65,14 @@ const updateUserRole = async (userIdx) => {
 }
 
 const selectUserInfo = async (accountIdx) => {
-    rows = await getUserInfo(accountIdx)
+    const userInfo = await getUserInfo(accountIdx)
 
-    return rows
+    return userInfo
 }
 
 const updateUserInfo = async (accountIdx, userName, email, gender, birth) => {
-    if (!userName.match(userNameRegx)) {
-        throw customError(400, "이름 형식이 잘못됨")
-    } else if (!email.match(emailRegx)) {
-        throw customError(400, "이메일 형식이 잘못됨")
-    } else if (!gender.match(genderRegx)) {
-        throw customError(400, "성별 형식이 잘못됨")
-    } else if (!birth.match(birthRegx)) {
-        throw customError(400, "생일 형식이 잘못됨")
-    }
-
-    rows = await getIsDuplicateEmail(email, accountIdx)
-    if (rows) {
+    const duplicatedUser = await getIsDuplicateEmail(email, accountIdx)
+    if (duplicatedUser) {
         throw customError(409, "이메일 중복")
     }
 

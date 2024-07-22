@@ -1,19 +1,10 @@
 const customError = require("../router/data/error")
-const { commentRegx } = require("../const/regx")
 const { isPost } = require("../repository/posts")
-const { postComment, isComment, putComment, getComments, deleteCommentRepo } = require("../repository/comments")
-
-let rows = null
+const { postComment, isComment, putComment, getComments, deleteCommentRepo, isCommentLike, commentLikeRepo, commentUnlikeRepo } = require("../repository/comments")
 
 const createComment = async (accountIdx, postIdx, comment) => {
-    if (!postIdx) {
-        throw customError(400, "postIdx 값이 안옴")
-    } else if (!comment.match(commentRegx)) {
-        throw customError(400, "댓글 형식 확인 필요")
-    }
-
-    rows = await isPost(postIdx)
-    if (!rows) {
+    const post = await isPost(postIdx)
+    if (!post) {
         throw customError(404, "해당 게시물이 존재하지 않음")
     }
 
@@ -21,12 +12,8 @@ const createComment = async (accountIdx, postIdx, comment) => {
 }
 
 const updateComment = async (commentIdx, comment) => {
-    if (!comment.match(commentRegx)) {
-        throw customError(400, "댓글 형식 확인 필요")
-    }
-
-    rows = await isComment(commentIdx)
-    if (!rows) {
+    const comment = await isComment(commentIdx)
+    if (!comment) {
         throw customError(404, "해당 댓글이 존재하지 않음")
     }
 
@@ -34,22 +21,32 @@ const updateComment = async (commentIdx, comment) => {
 }
 
 const selectComments = async (postIdx) => {
-    if (!postIdx) {
-        throw customError(400, "postIdx 값이 안옴")
-    }
-
-    rows = await isPost(postIdx)
-    if (!rows) {
+    const post = await isPost(postIdx)
+    if (!post) {
         throw customError(404, "해당 게시물이 존재하지 않음")
     }
 
-    rows = await getComments(postIdx)
+    const comments = await getComments(postIdx)
 
-    return rows
+    return comments
 }
 
 const deleteComment = async (commentIdx) => {
     await deleteCommentRepo(commentIdx)
 }
 
-module.exports = { createComment, updateComment, selectComments, deleteComment }
+const commentLike = async (accountIdx, commentIdx) => {
+    const comment = await isComment(commentIdx)
+    if (!comment) {
+        throw customError(404, "해당 댓글이 존재하지 않음")
+    }
+
+    const iscommentLike = await isCommentLike(accountIdx, commentIdx)
+    if (!iscommentLike) {
+        await commentLikeRepo(accountIdx, commentIdx)
+    } else {
+        await commentUnlikeRepo(accountIdx, commentIdx)
+    }
+}
+
+module.exports = { createComment, updateComment, selectComments, deleteComment, commentLike }
