@@ -2,26 +2,23 @@ const router = require("express").Router()
 const isLogin = require("../middleware/isLogin")
 const isRole = require("../middleware/isRole")
 const customError = require("./data/error")
-const { idRegx, pwRegx, userNameRegx, emailRegx, genderRegx, birthRegx } = require("../const/regx")
-const { 
-    validateLogin, selectId, selectPw, createAccount, 
-    selectUsersInfo, updateUserRole, selectUserInfo, updateUserInfo, deleteUser
- } = require("../service/users")
+const regx = require("../const/regx")
+const userService = require("../service/users")
 
 router.post("/login", async (req, res, next) => {
     const idValue = req.body.idValue
     const pwValue = req.body.pwValue
 
     try {
-        if (!idValue.match(idRegx)) {
+        if (!idValue.match(regx.idRegx)) {
             throw customError(400, "아이디 형식이 잘못됨")
         } 
         
-        if (!pwValue.match(pwRegx)) {
+        if (!pwValue.match(regx.pwRegx)) {
             throw customError(400, "비밀번호 형식이 잘못됨")
         }
 
-        const account = await validateLogin(idValue, pwValue)
+        const account = await userService.validateLogin(idValue, pwValue)
 
         req.session.accountIdx = account.idx
         req.session.name = account.name
@@ -46,15 +43,15 @@ router.get("/find/id", async (req, res, next) => {
     const email = req.body.email
 
     try {
-        if (!userName.match(userNameRegx)) {
+        if (!userName.match(regx.userNameRegx)) {
             throw customError(400, "이름 형식이 잘못됨")
         } 
         
-        if (!email.match(emailRegx)) {
+        if (!email.match(regx.emailRegx)) {
             throw customError(400, "이메일 형식이 잘못됨")
         }
 
-        const account = await selectId(userName, email)
+        const account = await userService.selectId(userName, email)
 
         res.status(200).send(account)
     } catch (err) {
@@ -67,15 +64,15 @@ router.get("/find/pw", async (req, res, next) => {
     const idValue = req.body.idValue
 
     try {
-        if (!userName.match(userNameRegx)) {
+        if (!userName.match(regx.userNameRegx)) {
             throw customError(400, "이름 형식이 잘못됨")
         } 
         
-        if (!idValue.match(idRegx)) {
+        if (!idValue.match(regx.idRegx)) {
             throw customError(400, "id 형식이 잘못됨")
         } 
 
-        const account = await selectPw(userName, idValue)
+        const account = await userService.selectPw(userName, idValue)
 
         res.status(200).send(account)
     } catch (err) {
@@ -92,31 +89,31 @@ router.post("/", async (req, res, next) => {
     const birth = req.body.birth
 
     try {
-        if (!userName.match(userNameRegx)) {
+        if (!userName.match(regx.userNameRegx)) {
             throw customError(400, "이름 형식이 잘못됨")
         } 
         
-        if (!idValue.match(idRegx)) {
+        if (!idValue.match(regx.idRegx)) {
             throw customError(400, "아이디 형식이 잘못됨")
         } 
         
-        if (!pwValue.match(pwRegx)) {
+        if (!pwValue.match(regx.pwRegx)) {
             throw customError(400, "비밀번호 형식이 잘못됨")
         } 
         
-        if (!email.match(emailRegx)) {
+        if (!email.match(regx.emailRegx)) {
             throw customError(400, "이메일 형식이 잘못됨")
         } 
         
-        if (!gender.match(genderRegx)) {
+        if (!gender.match(regx.genderRegx)) {
             throw customError(400, "성별 형식이 잘못됨")
         } 
         
-        if (!birth.match(birthRegx)) {
+        if (!birth.match(regx.birthRegx)) {
             throw customError(400, "생일 형식이 잘못됨")
         }
 
-        await createAccount(userName, idValue, pwValue, email, gender, birth)
+        await userService.createAccount(userName, idValue, pwValue, email, gender, birth)
         res.status(200).send()
         // console.log(`userName : ${userName}`)
         // console.log(`idValue : ${idValue}`)
@@ -133,7 +130,7 @@ router.post("/", async (req, res, next) => {
 
 router.get("/", isLogin, isRole, async (req, res, next) => {
     try {
-        const usersInfo = await selectUsersInfo()
+        const usersInfo = await userService.selectUsersInfo()
 
         res.status(200).send(usersInfo)
     } catch (err) {
@@ -149,7 +146,7 @@ router.put("/:userIdx/auth", isLogin, isRole, async(req, res, next) => {
             throw customError(400, "userIdx 안 옴")
         }
 
-        await updateUserRole(userIdx) 
+        await userService.updateUserRole(userIdx) 
         res.status(200).send()
     } catch (err) {
         next(err)
@@ -160,7 +157,7 @@ router.get("/me", isLogin, async (req, res, next) => {
     const accountIdx = req.user.accountIdx
 
     try {
-        const userInfo = await selectUserInfo(accountIdx)
+        const userInfo = await userService.selectUserInfo(accountIdx)
         res.status(200).send(userInfo)
     } catch (err) {
         next(err)
@@ -175,23 +172,23 @@ router.put("/me", isLogin, async (req, res, next) => {
     const birth = req.body.birth
 
     try {
-        if (!userName.match(userNameRegx)) {
+        if (!userName.match(regx.userNameRegx)) {
             throw customError(400, "이름 형식이 잘못됨")
         } 
         
-        if (!email.match(emailRegx)) {
+        if (!email.match(regx.emailRegx)) {
             throw customError(400, "이메일 형식이 잘못됨")
         } 
         
-        if (!gender.match(genderRegx)) {
+        if (!gender.match(regx.genderRegx)) {
             throw customError(400, "성별 형식이 잘못됨")
         } 
         
-        if (!birth.match(birthRegx)) {
+        if (!birth.match(regx.birthRegx)) {
             throw customError(400, "생일 형식이 잘못됨")
         }
         
-        await updateUserInfo(accountIdx, userName, email, gender, birth)
+        await userService.updateUserInfo(accountIdx, userName, email, gender, birth)
         res.status(200).send()
     } catch (err) {
         next(err)
@@ -202,7 +199,7 @@ router.delete("/me", isLogin, async (req, res, next) => {{
     const accountIdx = req.user.accountIdx
 
     try {
-        await deleteUser(accountIdx)
+        await userService.sdeleteUser(accountIdx)
         res.status(200).send()
     } catch (err) {
         next(err)

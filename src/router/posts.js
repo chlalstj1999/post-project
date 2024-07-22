@@ -1,9 +1,9 @@
 const router = require("express").Router()
 const isLogin = require("../middleware/isLogin")
 const isPostUserMatch = require("../middleware/isPostUserMatch")
-const { postTitleRegx, postContentRegx } = require("../const/regx")
+const regx = require("../const/regx")
 const customError = require("./data/error")
-const { selectPosts, createPost, udpatePost, selectPost, deletePost, postLike } = require("../service/posts")
+const postService = require("../service/posts")
 
 router.get("/list", async (req, res, next) => {
     const categoryIdx = req.query.categoryIdx
@@ -13,7 +13,7 @@ router.get("/list", async (req, res, next) => {
             throw customError(400, "categoryIdx 값이 안 옴")
         }
 
-        const posts = await selectPosts(categoryIdx)
+        const posts = await postService.selectPosts(categoryIdx)
         res.status(200).send(posts)
     } catch (err) {
         next(err)
@@ -31,15 +31,15 @@ router.post("/", isLogin, async (req, res, next) => {
             throw customError(400, "categoryIdx 값이 안옴")
         } 
         
-        if (!title.match(postTitleRegx)) {
+        if (!title.match(regx.postTitleRegx)) {
             throw customError(400, "제목 형식 확인 필요")
         } 
         
-        if (!content.match(postContentRegx)) {
+        if (!content.match(regx.postContentRegx)) {
             throw customError(400, "내용 형식 확인 필요")
         }
         
-        await createPost(accountIdx, categoryIdx, title, content)
+        await postService.createPost(accountIdx, categoryIdx, title, content)
         res.status(200).send()
     } catch (err) {
         next(err)
@@ -52,13 +52,13 @@ router.put("/:postIdx", isLogin, isPostUserMatch, async (req, res, next) => {
     const content = req.body.content
 
     try {
-        if (!title.match(postTitleRegx)) {
+        if (!title.match(regx.postTitleRegx)) {
             throw customError(400, "제목 형식 확인 필요")
-        } else if (!content.match(postContentRegx)) {
+        } else if (!content.match(regx.postContentRegx)) {
             throw customError(400, "내용 형식 확인 필요")
         }
 
-        await udpatePost(postIdx, title, content)
+        await postService.udpatePost(postIdx, title, content)
         res.status(200).send()
     } catch (err) {
         next(err)
@@ -73,7 +73,7 @@ router.get("/:postIdx", async (req, res, next) => {
             throw customError(400, "postIdx 값이 안옴")
         }
 
-        const post = await selectPost(postIdx) 
+        const post = await postService.selectPost(postIdx) 
         res.status(200).send(post)
     } catch (err) {
         next(err)
@@ -84,7 +84,7 @@ router.delete("/:postIdx", isLogin, isPostUserMatch, async (req, res, next) => {
     const postIdx = req.params.postIdx
 
     try {
-        await deletePost(postIdx)
+        await postService.deletePost(postIdx)
         res.status(200).send()
     } catch (err) {
         next(err)
@@ -100,7 +100,7 @@ router.put("/:postIdx/like", isLogin, async (req, res, next) => {
             throw customError(400, "postIdx 값이 안옴")
         }
 
-        await postLike(accountIdx, postIdx)
+        await postService.postLike(accountIdx, postIdx)
         res.status(200).send()
     } catch (err) {
         next(err)
