@@ -20,4 +20,16 @@ const postContentRegx = /^.{1,500}$/
 //1글자 이상 100글자 이하
 const commentRegx = /^.{1,100}$/
 
-module.exports = { idRegx, pwRegx, userNameRegx, emailRegx, genderRegx, birthRegx, categoryNameRegx, postTitleRegx, postContentRegx, commentRegx }
+const regx = {
+    idRegx : idRegx,
+    pwRegx : pwRegx,
+    userNameRegx : userNameRegx,
+    emailRegx : emailRegx,
+    genderRegx : genderRegx,
+    birthRegx : birthRegx,   
+    categoryNameRegx : categoryNameRegx,
+    postTitleRegx : postTitleRegx,
+    postContentRegx : postContentRegx,
+    commentRegx : commentRegx,
+}
+module.exports = regx
