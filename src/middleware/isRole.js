@@ -6,7 +6,7 @@ const checkLogin = (req, res, next) => {
 
     try {
         if ( roleIdx !== admin ) {
-            throw customError(401, "관리자 권한 필요")
+            throw customError(403, "관리자 권한 필요")
         }
         next()
     } catch (err) {
