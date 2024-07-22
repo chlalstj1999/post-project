@@ -8,11 +8,11 @@ const getPosts = async (categoryIdx) => {
             ON accountIdx = account.idx 
             WHERE categoryIdx = ? 
             ORDER BY post.createdAt DESC`, [categoryIdx])
+        
+        return posts.length !== 0 ? posts : null
     } catch (err) {
         next(err)
     }
-
-    return posts.length !== 0 ? posts : null
 }
 
 const createPostRepo = async (accountIdx, categoryIdx, title, content) => {
@@ -26,11 +26,11 @@ const createPostRepo = async (accountIdx, categoryIdx, title, content) => {
 const isPost = async (postIdx) => {
     try {
         const post = await pool.query(`SELECT idx FROM post WHERE idx = ?`, [postIdx])
+
+        return post.length !== 0 ? post[0] : null
     } catch (err) {
         next(err)
     }
-
-    return post.length !== 0 ? post[0] : null
 }
 
 const putPost = async (postIdx, title, content) => {
@@ -45,11 +45,11 @@ const getPost = async (postIdx) => {
     try {
         const post = await pool.query(`SELECT post.idx AS postIdx, account.name AS userName, post.title, post.content, post.createdAt, post.countLike AS cntPostLike
             FROM post JOIN account ON post.accountIdx = account.idx WHERE post.idx = ?`, [postIdx])
+
+        return post.length !== 0 ? post[0] : null
     } catch (err) {
         next(err)
     }
-
-    return post.length !== 0 ? post[0] : null
 }
 
 const deletePostRepo = async (postIdx) => {
@@ -63,11 +63,10 @@ const deletePostRepo = async (postIdx) => {
 const isPostLike = async (accountIdx, postIdx) => {
     try {
         const ispostLike = await pool.query("SELECT * FROM postLike WHERE postIdx = ? AND accountIdx = ?", [postIdx, accountIdx])
+        return ispostLike.length !== 0 ? ispostLike[0] : nulls
     } catch (err) {
         next(err)
     }
-
-    return ispostLike.length !== 0 ? ispostLike[0] : null
 }
 
 const postLikeRepo = async (accountIdx, postIdx) => {
@@ -92,7 +91,20 @@ const postUnlikeRepo = async (accountIdx, postIdx) => {
             JOIN post ON postLike.postIdx = post.idx
             ) WHERE idx = ?`, [postIdx])
     } catch (err) {
-        console.log(err)
+        next(err)
     }
 }
-module.exports = { getPosts, createPostRepo, isPost, putPost, getPost, deletePostRepo, isPostLike, postLikeRepo, postUnlikeRepo }
+
+const postRepository = {
+    getPosts : getPosts,
+    createPostRepo : createPostRepo,
+    isPost : isPost,
+    putPost : putPost,
+    getPost : getPost,
+    deletePostRepo : deletePostRepo,
+    isPostLike : isPostLike,
+    postLikeRepo : postLikeRepo,
+    postUnlikeRepo : postUnlikeRepo
+}
+
+module.exports = postRepository

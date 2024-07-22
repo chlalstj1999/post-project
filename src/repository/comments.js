@@ -11,11 +11,11 @@ const postComment = async (accountIdx, postIdx, comment) => {
 const isComment = async (commentIdx) => {
     try {
         const comment = await pool.query("SELECT idx FROM comment WHERE idx = ?", [commentIdx])
+        
+        return comment.length !== 0 ? comment[0] : null
     } catch (err) {
         next(err)
     } 
-
-    return comment.length !== 0 ? comment[0] : null
 }
 
 const putComment = async (commentIdx, comment) => {
@@ -30,11 +30,11 @@ const getComments = async (postIdx) => {
     try {
         const comments = await pool.query(`SELECT comment.idx AS commentIdx, account.name AS userName, comment.content AS comment, comment.createdAt, comment.countLike AS cntCommentLike
             FROM comment JOIN account ON comment.accountIdx = account.idx WHERE comment.postIdx = ? ORDER BY comment.createdAt DESC`, [postIdx])
+        
+        return comments.length !== 0 ? comments : null
     } catch (err) {
         next(err)
     } 
-
-    return comments.length !== 0 ? comments : null
 }
 
 const deleteCommentRepo = async (commentIdx) => {
@@ -48,11 +48,11 @@ const deleteCommentRepo = async (commentIdx) => {
 const isCommentLike = async (accountIdx, commentIdx) => {
     try {
         const commentLike = await pool.query("SELECT * FROM commentLike WHERE commentIdx = ? AND accountIdx = ?", [commentIdx, accountIdx])
+        
+        return commentLike.length !== 0 ? commentLike[0] : null
     } catch (err) {
         next(err)
     }
-
-    return commentLike.length !== 0 ? commentLike[0] : null
 }
 
 const commentLikeRepo = async (accountIdx, commentIdx) => {
@@ -81,7 +81,15 @@ const commentUnlikeRepo = async (accountIdx, commentIdx) => {
     }
 }
 
-module.exports = { 
-    postComment, isComment, putComment, getComments, deleteCommentRepo, 
-    isCommentLike, commentLikeRepo, commentUnlikeRepo
- }
+const commentRepository = {
+    postComment : postComment,
+    isComment : isComment,
+    putComment : putComment,
+    getComments : getComments,
+    deleteCommentRepo : deleteCommentRepo,
+    isCommentLike : isCommentLike,
+    commentLikeRepo : commentLikeRepo,
+    commentUnlikeRepo : commentUnlikeRepo
+}
+
+module.exports = commentRepository
