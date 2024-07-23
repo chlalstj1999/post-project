@@ -4,7 +4,7 @@ const categoryRepository = require("../repository/categorys")
 const createCategory = async (categoryName) => {
     const category = await categoryRepository.isDuplicateCategory(categoryName)
 
-    if (category) {
+    if (category.length !== 0) {
         throw customError(409, "카테고리가 이미 있음")
     }
 
@@ -19,12 +19,12 @@ const selectCategory = async () => {
 
 const updateCategory = async (categoryIdx, categoryName) => {
     let category = await categoryRepository.isCategory(categoryIdx)
-    if (!category) {
+    if (category.length === 0) {
         throw customError(404, "해당 카테고리가 존재하지 않음")
     }
 
-    let = await categoryRepository.isDuplicateCategory(categoryName) 
-    if (category) {
+    category = await categoryRepository.isDuplicateCategory(categoryName) 
+    if (category.length !== 0) {
         throw customError(404, "카테고리가 이미 있음")
     }
 
@@ -33,7 +33,7 @@ const updateCategory = async (categoryIdx, categoryName) => {
 
 const deleteCategory = async (categoryIdx) => {
     const category = await categoryRepository.isCategory(categoryIdx)
-    if (!category) {
+    if (category.length === 0) {
         throw customError(404, "해당 카테고리가 존재하지 않음")
     }
 

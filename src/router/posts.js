@@ -1,17 +1,17 @@
 const router = require("express").Router()
 const isLogin = require("../middleware/isLogin")
-const isPostUserMatch = require("../middleware/isPostUserMatch")
 const regx = require("../const/regx")
-const customError = require("./data/error")
 const postService = require("../service/posts")
+const isRegxMatch = require("../middleware/isRegxMatch")
+const customError = require("./data/error")
 
 router.get("/list", async (req, res, next) => {
     const categoryIdx = req.query.categoryIdx
 
     try {
-        if (!categoryIdx) {
-            throw customError(400, "categoryIdx 값이 안 옴")
-        }
+        if (!categoryIdx.match(regx.idxRegx)) {
+            throw customError(400, "categoryIdx값이 안 옴")
+        } 
 
         const posts = await postService.selectPosts(categoryIdx)
         res.status(200).send(posts)
@@ -20,25 +20,17 @@ router.get("/list", async (req, res, next) => {
     }
 }) 
 
-router.post("/", isLogin, async (req, res, next) => {
+router.post("/", isLogin('accountIdx'), isRegxMatch([['title', regx.postTitleRegx],['content', regx.postContentRegx]]), async (req, res, next) => {
     const accountIdx = req.user.accountIdx
     const categoryIdx = req.body.categoryIdx
     const title = req.body.title
     const content = req.body.content
 
     try {
-        if (!categoryIdx) {
-            throw customError(400, "categoryIdx 값이 안옴")
+        if (!categoryIdx.match(regx.idxRegx)) {
+            throw customError(400, "categoryIdx값이 안 옴")
         } 
-        
-        if (!title.match(regx.postTitleRegx)) {
-            throw customError(400, "제목 형식 확인 필요")
-        } 
-        
-        if (!content.match(regx.postContentRegx)) {
-            throw customError(400, "내용 형식 확인 필요")
-        }
-        
+
         await postService.createPost(accountIdx, categoryIdx, title, content)
         res.status(200).send()
     } catch (err) {
@@ -46,19 +38,18 @@ router.post("/", isLogin, async (req, res, next) => {
     }
 })
 
-router.put("/:postIdx", isLogin, isPostUserMatch, async (req, res, next) => {
+router.put("/:postIdx", isLogin('accountIdx'), isRegxMatch([['title', regx.postTitleRegx],['content', regx.postContentRegx]]), async (req, res, next) => {
+    const accountIdx = req.user.accountIdx
     const postIdx = req.params.postIdx
     const title = req.body.title
     const content = req.body.content
 
     try {
-        if (!title.match(regx.postTitleRegx)) {
-            throw customError(400, "제목 형식 확인 필요")
-        } else if (!content.match(regx.postContentRegx)) {
-            throw customError(400, "내용 형식 확인 필요")
-        }
+        if (!postIdx.match(regx.idxRegx)) {
+            throw customError(400, "categoryIdx값이 안 옴")
+        } 
 
-        await postService.udpatePost(postIdx, title, content)
+        await postService.udpatePost(accountIdx, postIdx, title, content)
         res.status(200).send()
     } catch (err) {
         next(err)
@@ -69,9 +60,9 @@ router.get("/:postIdx", async (req, res, next) => {
     const postIdx = req.params.postIdx
     
     try {
-        if (!postIdx) {
-            throw customError(400, "postIdx 값이 안옴")
-        }
+        if (!postIdx.match(regx.idxRegx)) {
+            throw customError(400, "categoryIdx값이 안 옴")
+        } 
 
         const post = await postService.selectPost(postIdx) 
         res.status(200).send(post)
@@ -80,10 +71,14 @@ router.get("/:postIdx", async (req, res, next) => {
     }
 })
 
-router.delete("/:postIdx", isLogin, isPostUserMatch, async (req, res, next) => {
+router.delete("/:postIdx", isLogin('accountIdx'), async (req, res, next) => {
     const postIdx = req.params.postIdx
 
     try {
+        if (!postIdx.match(regx.idxRegx)) {
+            throw customError(400, "categoryIdx값이 안 옴")
+        }  
+
         await postService.deletePost(postIdx)
         res.status(200).send()
     } catch (err) {
@@ -91,14 +86,14 @@ router.delete("/:postIdx", isLogin, isPostUserMatch, async (req, res, next) => {
     }
 })
 
-router.put("/:postIdx/like", isLogin, async (req, res, next) => {
+router.put("/:postIdx/like", isLogin('accountIdx'), async (req, res, next) => {
     const accountIdx = req.user.accountIdx
     const postIdx = req.params.postIdx
 
     try {
-        if (!postIdx) {
-            throw customError(400, "postIdx 값이 안옴")
-        }
+        if (!postIdx.match(regx.idxRegx)) {
+            throw customError(400, "categoryIdx값이 안 옴")
+        } 
 
         await postService.postLike(accountIdx, postIdx)
         res.status(200).send()

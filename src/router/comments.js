@@ -1,21 +1,19 @@
 const router = require("express").Router()
 const isLogin = require("../middleware/isLogin")
-const isCommentUserMatch = require("../middleware/isCommentUserMatch")
-const customError = require("./data/error")
 const regx = require("../const/regx")
 const commentService = require("../service/comments")
+const isRegxMatch = require("../middleware/isRegxMatch")
+const customError = require("./data/error")
 
-router.post("/", isLogin, async (req, res, next) => {
+router.post("/", isLogin('accountIdx'), isRegxMatch([['comment', regx.commentRegx]]), async (req, res, next) => {
     const accountIdx = req.user.accountIdx
     const postIdx = req.body.postIdx
     const comment = req.body.comment
 
     try {
-        if (!postIdx) {
-            throw customError(400, "postIdx 값이 안옴")
-        } else if (!comment.match(regx.commentRegx)) {
-            throw customError(400, "댓글 형식 확인 필요")
-        }
+        if (!postIdx.match(regx.idxRegx)) {
+            throw customError(400, "categoryIdx값이 안 옴")
+        } 
 
         await commentService.createComment(accountIdx, postIdx, comment)
         res.status(200).send()
@@ -24,16 +22,17 @@ router.post("/", isLogin, async (req, res, next) => {
     }
 })
 
-router.put("/:commentIdx", isLogin, isCommentUserMatch, async (req, res, next) => {
+router.put("/:commentIdx", isLogin('accountIdx'), isRegxMatch([['comment', regx.commentRegx]]), async (req, res, next) => {
+    const accountIdx = req.user.accountIdx
     const commentIdx = req.params.commentIdx
     const comment = req.body.comment
 
     try {
-        if (!comment.match(regx.commentRegx)) {
-            throw customError(400, "댓글 형식 확인 필요")
-        }
+        if (!commentIdx.match(regx.idxRegx)) {
+            throw customError(400, "categoryIdx값이 안 옴")
+        } 
 
-        await commentService.updateComment(commentIdx, comment)
+        await commentService.updateComment(accountIdx, commentIdx, comment)
         res.status(200).send()
     } catch (err) {
         next(err)
@@ -44,9 +43,9 @@ router.get("/", async(req, res, next) => {
     const postIdx = req.body.postIdx
     
     try {
-        if (!postIdx) {
-            throw customError(400, "postIdx 값이 안옴")
-        }
+        if (!postIdx.match(regx.idxRegx)) {
+            throw customError(400, "categoryIdx값이 안 옴")
+        } 
 
         const comments = await commentService.selectComments(postIdx)
         res.status(200).send(comments)
@@ -55,10 +54,14 @@ router.get("/", async(req, res, next) => {
     }
 })
 
-router.delete("/:commentIdx", isLogin, isCommentUserMatch, async (req, res, next) => {
+router.delete("/:commentIdx", isLogin('accountIdx'), async (req, res, next) => {
     const commentIdx = req.params.commentIdx
 
     try {
+        if (!commentIdx.match(regx.idxRegx)) {
+            throw customError(400, "categoryIdx값이 안 옴")
+        } 
+
         await commentService.deleteComment(commentIdx)
         res.status(200).send()
     } catch (err) {
@@ -66,14 +69,14 @@ router.delete("/:commentIdx", isLogin, isCommentUserMatch, async (req, res, next
     }
 })
 
-router.put("/:commentIdx/like", isLogin, async (req, res, next) => {
+router.put("/:commentIdx/like", isLogin('accountIdx'), async (req, res, next) => {
     const accountIdx = req.user.accountIdx
     const commentIdx = req.params.commentIdx
 
     try {
-        if (!commentIdx) {
-            throw customError(400, "commentIdx 값이 안옴")
-        }
+        if (!commentIdx.match(regx.idxRegx)) {
+            throw customError(400, "categoryIdx값이 안 옴")
+        } 
 
         await commentService.commentLike(accountIdx, commentIdx)
         res.status(200).send()

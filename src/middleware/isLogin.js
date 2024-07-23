@@ -1,17 +1,18 @@
 const customError = require("../router/data/error")
 
-const checkLogin = (req, res, next) => {
-    const accountIdx = req.session.accountIdx
-
-    req.user = req.session
-
-    try {
-        if (!accountIdx) {
-            throw customError(401, "로그인 필요")
+const checkLogin = param => {
+    return (req, res, next) => {
+        req.user = req.session
+        const accountIdx = req.user[param]
+    
+        try {
+            if (!accountIdx) {
+                throw customError(401, "로그인 필요")
+            }
+            next()
+        } catch (err) {
+            next(err)
         }
-        next()
-    } catch (err) {
-        next(err)
     }
 }
 

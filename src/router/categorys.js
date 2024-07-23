@@ -1,18 +1,15 @@
 const router = require("express").Router()
 const isLogin = require("../middleware/isLogin")
-const isRole = require("../middleware/isRole")
+const isAdmin = require("../middleware/isAdmin")
 const regx = require("../const/regx")
-const customError = require("./data/error")
 const categoryService = require("../service/categorys")
+const isRegxMatch = require("../middleware/isRegxMatch")
+const customError = require("./data/error")
 
-router.post("/", isLogin, isRole, async (req, res, next) => {
+router.post("/", isLogin('accountIdx'), isAdmin, isRegxMatch([['categoryName', regx.categoryNameRegx]]), async (req, res, next) => {
     const categoryName = req.body.categoryName
 
     try{
-        if (!categoryName.match(regx.categoryNameRegx)) {
-            throw customError(400, "카테고리 이름 형식 확인 필요")
-        }
-
         await categoryService.createCategory(categoryName)
         res.status(200).send()
     } catch (err) {
@@ -29,16 +26,14 @@ router.get("/", async (req, res, next) => {
     }
 })
 
-router.put("/:categoryIdx", isLogin, isRole, async (req, res, next) => {
+router.put("/:categoryIdx", isLogin('accountIdx'), isAdmin, isRegxMatch([['categoryName', regx.categoryNameRegx]]), async (req, res, next) => {
     const categoryIdx = req.params.categoryIdx
     const categoryName = req.body.categoryName
 
     try {
-        if (!categoryName.match(regx.categoryNameRegx)) {
-            throw customError(400, "카테고리 이름 형식 확인 필요")
-        } else if (!categoryIdx) {
-            throw customError(400, "categoryIdx 값이 오지 않음")
-        }
+        if (!categoryIdx.match(regx.idxRegx)) {
+            throw customError(400, "categoryIdx값이 안 옴")
+        } 
 
         await categoryService.updateCategory(categoryIdx, categoryName)
         res.status(200).send()
@@ -47,14 +42,14 @@ router.put("/:categoryIdx", isLogin, isRole, async (req, res, next) => {
     }
 })
 
-router.delete("/:categoryIdx", isLogin, isRole, async (req, res, next) => {
+router.delete("/:categoryIdx", isLogin('accountIdx'), isAdmin, async (req, res, next) => {
     const categoryIdx = req.params.categoryIdx
     
     try {
-        if (!categoryIdx) {
-            throw customError(400, "categoryIdx 값이 오지 않음")
-        }
-        
+        if (!categoryIdx.match(regx.idxRegx)) {
+            throw customError(400, "categoryIdx값이 안 옴")
+        } 
+
         await categoryService.deleteCategory(categoryIdx)
         res.status(200).send()
     } catch (err) {

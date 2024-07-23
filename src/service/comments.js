@@ -4,17 +4,21 @@ const commentRepository = require("../repository/comments")
 
 const createComment = async (accountIdx, postIdx, comment) => {
     const post = await postRepository.isPost(postIdx)
-    if (!post) {
+    if (post.length === 0) {
         throw customError(404, "해당 게시물이 존재하지 않음")
     }
 
     await commentRepository.postComment(accountIdx, postIdx, comment)
 }
 
-const updateComment = async (commentIdx, comment) => {
-    const existingComment = await commentRepository.isComment(commentIdx)
-    if (!existingComment) {
+const updateComment = async (accountIdx, commentIdx, comment) => {
+    const iscomment = await commentRepository.isComment(commentIdx)
+    if (iscomment.length === 0) {
         throw customError(404, "해당 댓글이 존재하지 않음")
+    }
+
+    if (iscomment.accountIdx !== accountIdx) {
+        throw customError(403, "해당 유저만 가능")
     }
 
     await commentRepository.putComment(commentIdx, comment)
@@ -22,7 +26,7 @@ const updateComment = async (commentIdx, comment) => {
 
 const selectComments = async (postIdx) => {
     const post = await postRepository.isPost(postIdx)
-    if (!post) {
+    if (post.length === 0) {
         throw customError(404, "해당 게시물이 존재하지 않음")
     }
 
@@ -32,17 +36,22 @@ const selectComments = async (postIdx) => {
 }
 
 const deleteComment = async (commentIdx) => {
+    const comment = await commentRepository.isComment(commentIdx)
+    if (comment.length === 0) {
+        throw customError(404, "해당 댓글이 존재하지 않음")
+    }
+    
     await commentRepository.deleteCommentRepo(commentIdx)
 }
 
 const commentLike = async (accountIdx, commentIdx) => {
     const comment = await commentRepository.isComment(commentIdx)
-    if (!comment) {
+    if (comment.length === 0) {
         throw customError(404, "해당 댓글이 존재하지 않음")
     }
 
     const iscommentLike = await commentRepository.isCommentLike(accountIdx, commentIdx)
-    if (!iscommentLike) {
+    if (iscommentLike.length === 0) {
         await commentRepository.commentLikeRepo(accountIdx, commentIdx)
     } else {
         await commentRepository.commentUnlikeRepo(accountIdx, commentIdx)

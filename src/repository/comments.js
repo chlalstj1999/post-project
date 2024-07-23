@@ -1,83 +1,97 @@
-const pool = require("../router/db/mariadb")
+// const pool = require("../router/db/mariadb")
+const client = require("../router/db/postgre")
+const customError = require("../router/data/error")
 
 const postComment = async (accountIdx, postIdx, comment) => {
     try {
-        await pool.query("INSERT INTO comment (postIdx, accountIdx, content, countLike) VALUES (?, ?, ?, ?)", [postIdx, accountIdx, comment, 0])
+        await client.query(`INSERT INTO project.comment ("postIdx", "accountIdx", content, "countLike") VALUES ($1, $2, $3, $4)`, [postIdx, accountIdx, comment, 0])
     } catch (err) {
-        next(err)
+        throw customError(500, err.message)
     }
 }
 
 const isComment = async (commentIdx) => {
     try {
-        const comment = await pool.query("SELECT idx FROM comment WHERE idx = ?", [commentIdx])
-        
-        return comment.length !== 0 ? comment[0] : null
+        const comment = await client.query(`SELECT idx, "accountIdx" FROM project.comment WHERE idx = $1`, [commentIdx])
+        const commentRows = comment.rows
+
+        return commentRows.length !== 0 ? commentRows[0] : []
     } catch (err) {
-        next(err)
+        throw customError(500, err.message)
     } 
 }
 
 const putComment = async (commentIdx, comment) => {
     try {
-        await pool.query("UPDATE comment SET content = ? WHERE idx = ?", [comment, commentIdx])
+        await client.query(`UPDATE project.comment SET content = $1 WHERE idx = $2`, [comment, commentIdx])
     } catch (err) {
-        next(err)
+        throw customError(500, err.message)
     } 
 }
 
 const getComments = async (postIdx) => {
     try {
-        const comments = await pool.query(`SELECT comment.idx AS commentIdx, account.name AS userName, comment.content AS comment, comment.createdAt, comment.countLike AS cntCommentLike
-            FROM comment JOIN account ON comment.accountIdx = account.idx WHERE comment.postIdx = ? ORDER BY comment.createdAt DESC`, [postIdx])
+        const comments = await client.query(
+            `SELECT comment.idx AS "commentIdx", account.name AS "userName", comment.content AS comment, comment."createdAt", comment."countLike" AS "cntCommentLike"
+            FROM project.comment 
+            JOIN project.account ON comment."accountIdx" = account.idx 
+            WHERE comment."postIdx" = $1 
+            ORDER BY comment."createdAt" DESC`, [postIdx]
+        )
+        const commentsRows = comments.rows
         
-        return comments.length !== 0 ? comments : null
+        return commentsRows.length !== 0 ? commentsRows : []
     } catch (err) {
-        next(err)
+        throw customError(500, err.message)
     } 
 }
 
 const deleteCommentRepo = async (commentIdx) => {
     try {
-        await pool.query("DELETE FROM comment WHERE idx = ?", [commentIdx])
+        await client.query(`DELETE FROM project.comment WHERE idx = $1`, [commentIdx])
     } catch (err) {
-        next(err)
+        throw customError(500, err.message)
     }
 }
 
 const isCommentLike = async (accountIdx, commentIdx) => {
     try {
-        const commentLike = await pool.query("SELECT * FROM commentLike WHERE commentIdx = ? AND accountIdx = ?", [commentIdx, accountIdx])
+        const commentLike = await client.query(`SELECT * FROM project."commentLike" WHERE "commentIdx" = $1 AND "accountIdx" = $2`, [commentIdx, accountIdx])
+        const commentLikeRows = commentLike.rows
         
-        return commentLike.length !== 0 ? commentLike[0] : null
+        return commentLikeRows.length !== 0 ? commentLikeRows[0] : []
     } catch (err) {
-        next(err)
+        throw customError(500, err.message)
     }
 }
 
 const commentLikeRepo = async (accountIdx, commentIdx) => {
     try {
-        await pool.query("INSERT INTO commentLike (commentIdx, accountIdx) VALUES (?, ?)", [commentIdx, accountIdx])
-        await pool.query(`UPDATE comment SET countLike = (
+        await client.query(`INSERT INTO project."commentLike" ("commentIdx", "accountIdx") VALUES ($1, $2)`, [commentIdx, accountIdx])
+        await client.query(
+            `UPDATE project.comment SET "countLike" = (
             SELECT COUNT(*)
-            FROM commentLike 
-            JOIN comment ON commentLike.commentIdx = comment.idx
-            ) WHERE idx = ?`, [commentIdx])
+            FROM project."commentLike" 
+            JOIN project.comment ON "commentLike"."commentIdx" = comment.idx
+            ) WHERE idx = $1`, [commentIdx]
+        )
     } catch (err) {
-        next(err)
+        throw customError(500, err.message)
     }
 }
 
 const commentUnlikeRepo = async (accountIdx, commentIdx) => {
     try {
-        await pool.query("DELETE FROM commentLike WHERE commentIdx = ? AND accountIdx = ?", [commentIdx, accountIdx])
-        await pool.query(`UPDATE comment SET countLike = (
+        await client.query(`DELETE FROM project."commentLike" WHERE "commentIdx" = $1 AND "accountIdx" = $2`, [commentIdx, accountIdx])
+        await client.query(
+            `UPDATE project.comment SET "countLike" = (
             SELECT COUNT(*)
-            FROM commentLike 
-            JOIN comment ON commentLike.commentIdx = comment.idx
-            ) WHERE idx = ?`, [commentIdx])
+            FROM project."commentLike" 
+            JOIN project.comment ON "commentLike"."commentIdx" = comment.idx
+            ) WHERE idx = $1`, [commentIdx]
+        )
     } catch (err) {
-        next(err)
+        throw customError(500, err.message)
     }
 }
 

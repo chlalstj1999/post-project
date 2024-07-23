@@ -4,7 +4,7 @@ const customError = require("../router/data/error")
 const validateLogin = async ( idValue, pwValue ) => {
     const account = await userRepository.getAccount(idValue, pwValue)
 
-    if (!account) {
+    if (account.length === 0) {
         throw customError(404, "해당하는 계정 정보가 없습니다")
     }
 
@@ -13,8 +13,8 @@ const validateLogin = async ( idValue, pwValue ) => {
 
 const selectId = async ( userName, email ) => {
     const account = await userRepository.getId(userName, email)
-
-    if (!account) {
+    
+    if (account.length === 0) {
         throw customError(404, "계정 정보가 없음")
     }
 
@@ -24,7 +24,7 @@ const selectId = async ( userName, email ) => {
 const selectPw = async (userName, idValue) => {
     const account = await userRepository.getPw(userName, idValue)
 
-    if (!account) {
+    if (account.length === 0) {
         throw customError(404, "계정 정보가 없음")
     }
     
@@ -34,13 +34,13 @@ const selectPw = async (userName, idValue) => {
 const createAccount = async (userName, idValue, pwValue, email, gender, birth) => {
     let duplicatedUser = await userRepository.getIsDuplicateId(idValue)
 
-    if (duplicatedUser) {
+    if (duplicatedUser.length !== 0) {
         throw customError(409, "아이디 중복")
     }
-
+    
     duplicatedUser = await userRepository.getIsDuplicateEmail(email)
 
-    if (duplicatedUser) {
+    if (duplicatedUser.length !== 0) {
         throw customError(409, "이메일 중복")
     }
 
@@ -56,7 +56,7 @@ const selectUsersInfo = async () => {
 const updateUserRole = async (userIdx) => {
     const users = await userRepository.getUser(userIdx)
 
-    if (!users) {
+    if (users.length === 0) {
         throw customError(404, "해당 user 존재하지 않음")
     }
 
@@ -71,7 +71,7 @@ const selectUserInfo = async (accountIdx) => {
 
 const updateUserInfo = async (accountIdx, userName, email, gender, birth) => {
     const duplicatedUser = await userRepository.getIsDuplicateEmail(email, accountIdx)
-    if (duplicatedUser) {
+    if (duplicatedUser.length !== 0) {
         throw customError(409, "이메일 중복")
     }
 

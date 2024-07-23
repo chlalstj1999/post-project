@@ -1,23 +1,16 @@
 const router = require("express").Router()
 const isLogin = require("../middleware/isLogin")
-const isRole = require("../middleware/isRole")
-const customError = require("./data/error")
+const isAdmin = require("../middleware/isAdmin")
 const regx = require("../const/regx")
 const userService = require("../service/users")
+const isRegxMatch = require("../middleware/isRegxMatch")
+const customError = require("./data/error")
 
-router.post("/login", async (req, res, next) => {
+router.post("/login", isRegxMatch([['idValue', regx.idRegx],['pwValue', regx.pwRegx]]), async (req, res, next) => {
     const idValue = req.body.idValue
     const pwValue = req.body.pwValue
 
     try {
-        if (!idValue.match(regx.idRegx)) {
-            throw customError(400, "아이디 형식이 잘못됨")
-        } 
-        
-        if (!pwValue.match(regx.pwRegx)) {
-            throw customError(400, "비밀번호 형식이 잘못됨")
-        }
-
         const account = await userService.validateLogin(idValue, pwValue)
 
         req.session.accountIdx = account.idx
@@ -29,7 +22,7 @@ router.post("/login", async (req, res, next) => {
     }
 })
 
-router.delete("/logout", isLogin, (req, res, next) => {
+router.delete("/logout", isLogin('accountIdx'), (req, res, next) => {
     try {
         req.session.destroy()
         res.status(200).send()
@@ -38,49 +31,38 @@ router.delete("/logout", isLogin, (req, res, next) => {
     }
 })
 
-router.get("/find/id", async (req, res, next) => {
+router.get("/find/id", isRegxMatch([['userName', regx.userNameRegx], ['email', regx.emailRegx]]), async (req, res, next) => {
     const userName = req.body.userName
     const email = req.body.email
 
     try {
-        if (!userName.match(regx.userNameRegx)) {
-            throw customError(400, "이름 형식이 잘못됨")
-        } 
-        
-        if (!email.match(regx.emailRegx)) {
-            throw customError(400, "이메일 형식이 잘못됨")
-        }
-
         const account = await userService.selectId(userName, email)
-
         res.status(200).send(account)
     } catch (err) {
         next(err)
     }
 })
 
-router.get("/find/pw", async (req, res, next) => {
+router.get("/find/pw", isRegxMatch([['userName', regx.userNameRegx],['idValue', regx.idRegx]]), async (req, res, next) => {
     const userName = req.body.userName
     const idValue = req.body.idValue
 
     try {
-        if (!userName.match(regx.userNameRegx)) {
-            throw customError(400, "이름 형식이 잘못됨")
-        } 
-        
-        if (!idValue.match(regx.idRegx)) {
-            throw customError(400, "id 형식이 잘못됨")
-        } 
-
         const account = await userService.selectPw(userName, idValue)
-
         res.status(200).send(account)
     } catch (err) {
         next(err)
     }
 })
 
-router.post("/", async (req, res, next) => {
+router.post("/", isRegxMatch([
+    ['userName', regx.userNameRegx],
+    ['idValue', regx.idRegx],
+    ['pwValue', regx.pwRegx],
+    ['email', regx.emailRegx],
+    ['gender', regx.genderRegx],
+    ['birth', regx.birthRegx]
+]), async (req, res, next) => {
     const userName = req.body.userName
     const idValue = req.body.idValue
     const pwValue = req.body.pwValue
@@ -89,61 +71,28 @@ router.post("/", async (req, res, next) => {
     const birth = req.body.birth
 
     try {
-        if (!userName.match(regx.userNameRegx)) {
-            throw customError(400, "이름 형식이 잘못됨")
-        } 
-        
-        if (!idValue.match(regx.idRegx)) {
-            throw customError(400, "아이디 형식이 잘못됨")
-        } 
-        
-        if (!pwValue.match(regx.pwRegx)) {
-            throw customError(400, "비밀번호 형식이 잘못됨")
-        } 
-        
-        if (!email.match(regx.emailRegx)) {
-            throw customError(400, "이메일 형식이 잘못됨")
-        } 
-        
-        if (!gender.match(regx.genderRegx)) {
-            throw customError(400, "성별 형식이 잘못됨")
-        } 
-        
-        if (!birth.match(regx.birthRegx)) {
-            throw customError(400, "생일 형식이 잘못됨")
-        }
-
         await userService.createAccount(userName, idValue, pwValue, email, gender, birth)
         res.status(200).send()
-        // console.log(`userName : ${userName}`)
-        // console.log(`idValue : ${idValue}`)
-        // console.log(`pwValue : ${pwValue}`)
-        // console.log(`email : ${email}`)
-        // console.log(`gender : ${gender}`)
-        // console.log(`birth : ${birth}`)
-        // 나중에는 지워주기
-        // develop / production -> if (모두가 develope일때만 실행) -> 환경변수로 해보기
     } catch (err) {
         next(err)
     }
 })
 
-router.get("/", isLogin, isRole, async (req, res, next) => {
+router.get("/", isLogin('accountIdx'), isAdmin, async (req, res, next) => {
     try {
         const usersInfo = await userService.selectUsersInfo()
-
         res.status(200).send(usersInfo)
     } catch (err) {
         next(err)
     }
 })
 
-router.put("/:userIdx/auth", isLogin, isRole, async(req, res, next) => {
+router.put("/:userIdx/auth", isLogin('accountIdx'), isAdmin, async(req, res, next) => {
     const userIdx = req.params.userIdx
 
     try {
-        if (!userIdx) {
-            throw customError(400, "userIdx 안 옴")
+        if (!userIdx.match(regx.idxRegx)) {
+            throw customError(400, "userIdx 값이 안 옴")
         }
 
         await userService.updateUserRole(userIdx) 
@@ -153,7 +102,7 @@ router.put("/:userIdx/auth", isLogin, isRole, async(req, res, next) => {
     }
 })
 
-router.get("/me", isLogin, async (req, res, next) => {
+router.get("/me", isLogin('accountIdx'), async (req, res, next) => {
     const accountIdx = req.user.accountIdx
 
     try {
@@ -164,7 +113,12 @@ router.get("/me", isLogin, async (req, res, next) => {
     }
 })
 
-router.put("/me", isLogin, async (req, res, next) => {
+router.put("/me", isLogin('accountIdx'), isRegxMatch([
+    ['userName', regx.userNameRegx],
+    ['email', regx.emailRegx],
+    ['gender', regx.genderRegx],
+    ['birth', regx.birthRegx]
+]), async (req, res, next) => {
     const accountIdx = req.user.accountIdx
     const userName = req.body.userName
     const email = req.body.email
@@ -172,22 +126,6 @@ router.put("/me", isLogin, async (req, res, next) => {
     const birth = req.body.birth
 
     try {
-        if (!userName.match(regx.userNameRegx)) {
-            throw customError(400, "이름 형식이 잘못됨")
-        } 
-        
-        if (!email.match(regx.emailRegx)) {
-            throw customError(400, "이메일 형식이 잘못됨")
-        } 
-        
-        if (!gender.match(regx.genderRegx)) {
-            throw customError(400, "성별 형식이 잘못됨")
-        } 
-        
-        if (!birth.match(regx.birthRegx)) {
-            throw customError(400, "생일 형식이 잘못됨")
-        }
-        
         await userService.updateUserInfo(accountIdx, userName, email, gender, birth)
         res.status(200).send()
     } catch (err) {
@@ -195,16 +133,14 @@ router.put("/me", isLogin, async (req, res, next) => {
     }
 })
 
-router.delete("/me", isLogin, async (req, res, next) => {{
+router.delete("/me", isLogin('accountIdx'), async (req, res, next) => {{
     const accountIdx = req.user.accountIdx
 
     try {
-        await userService.sdeleteUser(accountIdx)
+        await userService.deleteUser(accountIdx)
         res.status(200).send()
     } catch (err) {
         next(err)
-    } finally {
-        if (conn) return conn.end()
     }
 }})
 

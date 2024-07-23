@@ -1,120 +1,131 @@
-const pool = require("../router/db/mariadb")
+// const pool = require("../router/db/mariadb")
 const { admin, user } = require("../const/role")
+const client = require("../router/db/postgre")
+const customError = require("../router/data/error")
 
 const getAccount = async ( idValue, pwValue ) => {
     try {
-        const user = await pool.query("SELECT idx, name, roleIdx FROM account WHERE id = ? AND password = ?", [idValue, pwValue])
-        return user.length !== 0 ? user[0] : null
+        const user = await client.query(`SELECT idx, name, "roleIdx" FROM project.account WHERE id = $1 AND password = $2`, [idValue, pwValue])
+        const userRows = user.rows
+        return userRows.length !== 0 ? userRows[0] : []
     } catch(err) {
-        next(err)
+        throw customError(500, err.message)
     }
 }
 
 const getId = async ( userName, email ) => {
     try {
-        const user = await pool.query("SELECT id AS idValue FROM account WHERE name = ? AND email = ?", [userName, email])
-        return user.length !== 0 ? user[0] : null
+        const user = await client.query(`SELECT id AS "idValue" FROM project.account WHERE name = $1 AND email = $2`, [userName, email])
+        const userRows = user.rows
+        return userRows.length !== 0 ? userRows[0] : []
     } catch(err) {
-        next(err)
+        throw customError(500, err.message)
     }
 }
 
 const getPw = async ( userName, idValue ) => {
     try {
-        const user = await pool.query("SELECT password AS pwValue FROM account WHERE name = ? AND id = ?", [userName, idValue])
-        return user.length !== 0 ? user[0] : null
+        const user = await client.query(`SELECT password AS "pwValue" FROM project.account WHERE name = $1 AND id = $2`, [userName, idValue])
+        const userRows = user.rows
+        return userRows.length !== 0 ? userRows[0] : []
     } catch(err) {
-        next(err)
+        throw customError(500, err.message)
     }
 }
 
 const getIsDuplicateId = async (idValue) => {
     try {
-        const duplicatedUser = await pool.query("SELECT id FROM account WHERE id = ?", [idValue])
-        return duplicatedUser.length !== 0 ? duplicatedUser[0] : null
+        const duplicatedUser = await client.query(`SELECT id FROM project.account WHERE id = $1`, [idValue])
+        const duplicatedUserRows = duplicatedUser.rows
+        return duplicatedUserRows.length !== 0 ? duplicatedUserRows[0] : []
     } catch(err) {
-        next(err)
+        throw customError(500, err.message)
     }
 }
 
 const getIsDuplicateEmail = async (email, accountIdx) => {
     try {
         if (!accountIdx) {
-            const duplicatedUser = await pool.query("SELECT email FROM account WHERE email = ?", [email])
-            return duplicatedUser.length !== 0 ? duplicatedUser[0] : null
+            const duplicatedUser = await client.query(`SELECT 1 FROM project.account WHERE email = $1`, [email])
+            const duplicatedUserRows = duplicatedUser.rows
+            return duplicatedUserRows.length !== 0 ? duplicatedUserRows[0] : []
         } else {
-            const duplicatedUser = await pool.query("SELECT email FROM account WHERE email = ? AND idx != ?", [email, accountIdx])
-            return duplicatedUser.length !== 0 ? duplicatedUser[0] : null
+            const duplicatedUser = await client.query(`SELECT 1 FROM project.account WHERE email = $1 AND idx != $2`, [email, accountIdx])
+            const duplicatedUserRows = duplicatedUser.rows
+            return duplicatedUserRows.length !== 0 ? duplicatedUserRows[0] : []
         }
     } catch(err) {
-        next(err)
+        throw customError(500, err.message)
     }
 }
 
 const postAccount = async (userName, idValue, pwValue, email, gender, birth) => {
     try {
-        await pool.query("INSERT INTO account (name, id, password, email, gender, birth, roleIdx) VALUES (?, ?, ?, ?, ?, ?, ?)", [userName, idValue, pwValue, email, gender, birth, user])
+        await client.query(`INSERT INTO project.account (name, id, password, email, gender, birth, "roleIdx") VALUES ($1, $2, $3, $4, $5, $6, $7)`, [userName, idValue, pwValue, email, gender, birth, user])
     } catch(err) {
-        next(err)
+        throw customError(500, err.message)
     }
 }
 
 const getUsersInfo = async () => {
     try {
-        const usersInfo = await pool.query("SELECT account.idx AS userIdx, account.name AS userName, account.id AS idValue, role.name AS roleName FROM account JOIN role ON account.roleIdx = role.idx")
-        return usersInfo.length !== 0 ? usersInfo : null
+        const usersInfo = await client.query(`SELECT project.account.idx AS "userIdx", project.account.name AS "userName", project.account.id AS "idValue", project.role.name AS "roleName" FROM project.account JOIN project.role ON project.account."roleIdx" = project.role.idx`)
+        const usersInfoRows = usersInfo.rows
+        return usersInfoRows.length !== 0 ? usersInfoRows : []
     } catch(err) {
-        next(err)
+        throw customError(500, err.message)
     }
 }
 
 const getUser = async (userIdx) => {
     try {
-        const user = await pool.query("SELECT * FROM account WHERE idx = ?", [userIdx])
-        return user.length !== 0 ? user[0] : null
+        const user = await client.query(`SELECT 1 FROM project.account WHERE idx = $1`, [userIdx])
+        const userRows = user.rows
+        return userRows.length !== 0 ? userRows[0] : []
     } catch(err) {
-        next(err)
+        throw customError(500, err.message)
     }
 }
 
 const putUserRole = async (userIdx) => {
     try {
-        const accounts = await pool.query("SELECT roleIdx FROM account WHERE idx = ?", [userIdx])
-
-        const account = accounts[0]
+        const accounts = await client.query(`SELECT "roleIdx" FROM project.account WHERE idx = $1`, [userIdx])
+        const accountsRow = accounts.rows
+        const account = accountsRow[0]
 
         if (account.roleIdx === admin) {
-            await pool.query("UPDATE account SET roleIdx = ? WHERE idx = ?", [user, userIdx])
+            await client.query(`UPDATE project.account SET "roleIdx" = $1 WHERE idx = $2`, [user, userIdx])
         } else if (account.roleIdx === user) {
-            await pool.query("UPDATE account SET roleIdx = ? WHERE idx = ?", [admin, userIdx])
+            await client.query(`UPDATE project.account SET "roleIdx" = $1 WHERE idx = $2`, [admin, userIdx])
         }
     } catch(err) {
-        next(err)
+        throw customError(500, err.message)
     }
 }
 
 const getUserInfo = async (accountIdx) => {
     try {
-        const userInfo = await pool.query("SELECT name AS userName, email, gender, birth FROM account WHERE idx=?", [accountIdx])
-        return userInfo.length !== 0 ? userInfo[0] : null
+        const userInfo = await client.query(`SELECT name AS "userName", email, gender, birth FROM project.account WHERE idx=$1`, [accountIdx])
+        const userInfoRows = userInfo.rows
+        return userInfoRows.length !== 0 ? userInfoRows[0] : []
     } catch(err) {
-        next(err)
+        throw customError(500, err.message)
     }
 }
 
 const putUserInfo = async (accountIdx, userName, email, gender, birth) => {
     try {
-        await pool.query("UPDATE account SET name = ?, email = ?, gender = ?, birth = ? WHERE idx = ?", [userName, email, gender, birth, accountIdx])
+        await client.query(`UPDATE project.account SET name = $1, email = $2, gender = $3, birth = $4 WHERE idx = $5`, [userName, email, gender, birth, accountIdx])
     } catch(err) {
-        next(err)
+        throw customError(500, err.message)
     }
 }
 
 const deleteUserRepo = async (accountIdx) => {
     try {
-        await pool.query("DELETE FROM account WHERE idx = ?", [accountIdx])
+        await client.query(`DELETE FROM project.account WHERE idx = $1`, [accountIdx])
     } catch(err) {
-        next(err)
+        throw customError(500, err.message)
     }
 }
 
